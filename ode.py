@@ -2,6 +2,9 @@ import numpy as np
 from scipy.integrate import solve_ivp, odeint
 import matplotlib.pyplot as plt
 
+import torch
+from torch.utils.data import Dataset
+
 # pendulum diff. equation
 # y'' + (g/l) * sin(y) = 0
 # split into two first order diff. equations 
@@ -62,10 +65,11 @@ class Gen:
             x.append(self.step())
 
         x = np.array(x)
-        x = self.add_noise(x)
+        # x = self.add_noise(x)
         X,y = self.gen_samples(x)
+        data = timeseries(X, y)
         
-        return X, y
+        return data
 
     def add_noise(self, data):
 
@@ -90,12 +94,31 @@ class Gen:
         return np.array(X), np.array(y)
 
 
+class timeseries(Dataset):
+
+    def __init__(self, x, y):
+        self.x = torch.tensor(x)
+        self.y = torch.tensor(y)
+        self.len = x.shape[0]
+
+    def __getitem__(self, idx):
+        return self.x[idx], self.y[idx]
+
+    def __len__(self):
+        return self.len
+
+
+
 x = Gen(model,2,y0,timestep,samples)
 
-X,y = x.generate()
+data = x.generate()
+t = np.arange(0, len(data)*5)
 
-print(X, y)
-print(X.shape, y.shape)
+for i, row in enumerate(data):
+    print(i)
+    plt.plot(t[i*5 : (i+1) *5], row[0])
+
+plt.show()
 # t = np.arange(0, samples*timestep, timestep)
 # plt.figure(2)
 # plt.plot(t,y[:,1])
