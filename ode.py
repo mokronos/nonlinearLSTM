@@ -63,19 +63,40 @@ class Gen:
 
         x = np.array(x)
         x = self.add_noise(x)
+        X,y = self.gen_samples(x)
         
-        return x
+        return X, y
 
     def add_noise(self, data):
 
         noise = self.rng.normal(0, 0.01, data.shape)
         return data + noise
 
+    def gen_samples(self, data):
+
+        X = []
+        y = []
+
+        self.length = 5
+
+        for i in range(self.samples - self.length - 1):
+
+            timeseries = []
+            for j in range(i,i+self.length):
+                timeseries.append(data[j, 1])
+            X.append(timeseries)
+            y.append([data[i+self.length + 1, 1]])
+        
+        return np.array(X), np.array(y)
+
 
 x = Gen(model,2,y0,timestep,samples)
 
-y = x.generate()
-t = np.arange(0, samples*timestep, timestep)
-plt.figure(2)
-plt.plot(t,y[:,1])
-plt.show()
+X,y = x.generate()
+
+print(X, y)
+print(X.shape, y.shape)
+# t = np.arange(0, samples*timestep, timestep)
+# plt.figure(2)
+# plt.plot(t,y[:,1])
+# plt.show()
