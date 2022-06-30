@@ -5,93 +5,41 @@ import matplotlib.pyplot as plt
 import torch
 from torch.utils.data import Dataset
 
-# pendulum diff. equation
-# y'' + (g/l) * sin(y) = 0
-# split into two first order diff. equations 
-# y[0] = y
-# y[1] = y'
-# --> y[0]' = y[1]
-# --> y[1]' = - (g/l) * sin(y[0])
-
-def model(t,y):
-    l = 1
-    g = 9.8
-
-    res = [y[1], -(g/l) * np.sin(y[0])]
-    return res
-
-# [angle'_init, angle_init]
-y0 = [0, 0.1]
-samples = 500
-timestep = 0.01
-t = np.arange(0, samples*timestep, timestep)
-
-# y = solve_ivp(model, [0,samples*timestep], y0, dense_output=True, method = "LSODA")
-# y = y.sol(t)
-# y1 = y
-
-# y[0] = angle' y[1] = angle
-# plt.figure(1)
-# plt.plot(t,y[1,:])
-
-# plt.show()
-
 class Gen:
     """
     Generator for input and output data from a given differential equation
     """
 
-    def __init__(self, func, parameters, y0, timestep, samples):
+    def __init__(self, func, parameters, y0, dt, samples):
 
         self.func = func
         self.parameters = parameters
         self.y0 = y0
-        self.timestep = timestep
+        self.dt = dt
         self.samples = samples
         self.rng = np.random.default_rng(seed=42)
     
     def step(self): 
         
-        t = np.arange(0, self.timestep*2, self.timestep)
-        result = solve_ivp(self.func, [0, self.timestep*2], self.y0, dense_output=True, method = "LSODA")
+        t = np.arange(0, self.dt*2, self.dt)
+        result = solve_ivp(self.func, [0, self.dt*2], self.y0, dense_output=True, method = "LSODA")
         result = result.sol(t)
         result = result[:,-1]
         self.y0 = result
         return result
 
     def generate(self):
-        x = []
+        data = []
         for _ in range(self.samples):
-            x.append(self.step())
+            data.append(self.step())
 
-        x = np.array(x)
-        # x = self.add_noise(x)
-        X,y = self.gen_samples(x)
-        data = timeseries(X, y)
-        
-        return data
+        self.raw = np.array(data)
+        self.add_noise
 
-    def add_noise(self, data):
+    def add_noise(self):
 
-        noise = self.rng.normal(0, 0.01, data.shape)
-        return data + noise
-
-    def gen_samples(self, data):
-
-        X = []
-        y = []
-
-        self.length = 5
-
-        for i in range(self.samples - self.length - 1):
-
-            timeseries = []
-            for j in range(i,i+self.length):
-                timeseries.append(data[j, 1])
-            X.append(timeseries)
-            y.append([data[i+self.length + 1, 1]])
-        
-        return np.array(X), np.array(y)
+        noise = self.rng.normal(0, 0.01, self.raw.shape)
+        self.meas = self.raw + noise
 
 
 class timeseries(Dataset):
@@ -108,18 +56,31 @@ class timeseries(Dataset):
         return self.len
 
 
-
-x = Gen(model,2,y0,timestep,samples)
-
-data = x.generate()
-t = np.arange(0, len(data)*5)
-
-for i, row in enumerate(data):
-    print(i)
-    plt.plot(t[i*5 : (i+1) *5], row[0])
-
-plt.show()
-# t = np.arange(0, samples*timestep, timestep)
-# plt.figure(2)
-# plt.plot(t,y[:,1])
-# plt.show()
+if __name__ == "__main__":
+    
+    # pendulum diff. equation
+    # y'' + (g/l) * sin(y) = 0
+    # split into two first order diff. equations 
+    # y[0] = y
+    # y[1] = y'
+    # --> y[0]' = y[1]
+    # --> y[1]' = - (g/l) * sin(y[0])
+    
+    def model(t,y):
+        l = 1
+        g = 9.8
+    
+        res = [y[1], -(g/l) * np.sin(y[0])]
+        return res
+    
+    # [angle'_init, angle_init]
+    y0 = [0, 0.1]
+    samples = 500
+    dt = 0.01
+    
+    x = Gen(model,None,y0,dt,samples)
+    x.generate()
+    t = np.arange(0, len(x.raw)*dt, dt)
+    
+    plt.plot(t,x.raw)
+    plt.show()
