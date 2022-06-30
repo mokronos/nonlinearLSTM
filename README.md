@@ -14,6 +14,8 @@ Trying to train LSTMs for non-linear models.
     - some general tests one can run to maybe catch some bugs in your machine learning pipeline 
     - wanted to make it a habit to unit test my stuff more, as it is essential with bigger projects
     - should help with bug fixing too
+- https://www.mathworks.com/help/deeplearning/ug/sequence-to-sequence-regression-using-deep-learning.html
+    
 
 - a lot of literature for language models (predicting letter after letter) --> classification
 - but most things can be applied for lstm regression as well
