@@ -15,6 +15,12 @@ Trying to train LSTMs for non-linear models.
     - wanted to make it a habit to unit test my stuff more, as it is essential with bigger projects
     - should help with bug fixing too
 - https://www.mathworks.com/help/deeplearning/ug/sequence-to-sequence-regression-using-deep-learning.html
+- https://towardsdatascience.com/a-long-short-term-memory-network-to-model-nonlinear-dynamic-systems-72f703885818
+    - pretty much exactly what i want
+    - author remarks that when not giving the ground truth at every time step as input (making prediction window longer) the results get way worse, as errors add up
+- https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=9105007
+- https://cpb-us-e1.wpmucdn.com/campuspress-test.yale.edu/dist/7/677/files/2016/09/paper_LSTM_2017ACC-1sz2yir.pdf
+- https://sci-hub.se/10.1007/s40435-020-00673-4 , A LSTM based prediction model for nonlinear dynamical systems with chaotic itinerancy
     
 
 - a lot of literature for language models (predicting letter after letter) --> classification
@@ -45,3 +51,26 @@ Trying to train LSTMs for non-linear models.
 - expand to more variations of classic models
 - different activation functions (changes non-linearity)
 - change datasets to better reflect real world (distributions of inputs)
+
+
+## Architecture
+
+### Input, Output
+
+- input: 0 --> n, [batch size, sequence length (number of time steps) , number of features at every time step] (batch size = number of different sequences)
+    - features: inputs of dynamic systems (current/voltage or mechanical force)
+    - how to encode initial conditions? Give them as inputs, then make them 0
+- output: 0 --> n, any number of values the function would predict
+
+A system is only time dependent (time variant), if the system (not the input) varies in time.
+
+- example: learn y(t) = sin(t) + u with u = [0]*n as input !!! sin(t) not time variant
+    - so learn simple sine function and set input to 0
+    - sin is nonlinear and depends on previous time steps as the gradient has two options at almost every point
+- example: y(t) = t*u
+
+
+So we have multiple situations:
+- many-to-many: every time step has a input value
+- one-to-many: some or only the first time step has a input value, e.g. Initial value of a sine curve
+
