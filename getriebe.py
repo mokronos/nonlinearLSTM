@@ -72,12 +72,14 @@ def HD_friction_compliance(x,t):
     return f
 
 
-t = np.arange(0, 5, 0.001)
+if __name__ == "__main__":
 
-x = odeint(HD_friction_compliance, [0,0,0,0],t)
+    t = np.arange(0, 5, 0.001)
+
+    x = odeint(HD_friction_compliance, [0,0,0,0],t)
 
 
-fig, axs = plt.subplots(2)
-axs[0].plot(t,x[:,2]*180.0/np.pi)
-axs[1].plot(t,x[:,0]*180.0/np.pi)
-plt.show()
+    fig, axs = plt.subplots(2)
+    axs[0].plot(t,x[:,2]*180.0/np.pi)
+    axs[1].plot(t,x[:,0]*180.0/np.pi)
+    plt.show()
