@@ -3,10 +3,10 @@ from scipy.integrate import odeint
 import matplotlib.pyplot as plt
 
 
-def HD_friction_compliance(x,t):
+def HD_friction_compliance(x,t,i_m):
 
     # i_m is the system input u, here only step function
-    i_m = 0.28          # [A] 0.28 <= i_m <= 0.6
+    i_m = i_m         # [A] 0.28 <= i_m <= 0.6
 
     # in the beginning the load is 0, try later on with positive load
     T_load = 0          # [Nm] < 0.6
@@ -44,8 +44,8 @@ def HD_friction_compliance(x,t):
     k_2 = k_2/p_conv**3.0
 
     # asign physical names to states 
-    theta_wg = x[0]         # [rad]
-    theta_fs = x[1]         # [rad]
+    theta_wg = x[0]         # [rad] eingang
+    theta_fs = x[1]         # [rad] ausgang
     d_theta_wg = x[2]       # [rad/s] 
     d_theta_fs = x[3]       # [rad/s]
     f = [0,0,0,0]
@@ -76,7 +76,9 @@ if __name__ == "__main__":
 
     t = np.arange(0, 5, 0.001)
 
-    x = odeint(HD_friction_compliance, [0,0,0,0],t)
+    i_m = 0.28          # [A] 0.28 <= i_m <= 0.6
+
+    x = odeint(HD_friction_compliance, [0,0,0,0],t, args=(i_m,))
 
 
     fig, axs = plt.subplots(2)

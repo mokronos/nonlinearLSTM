@@ -3,6 +3,7 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
 from data import Gen
+from getriebe import HD_friction_compliance
 
 import matplotlib.pyplot as plt
 
@@ -96,31 +97,26 @@ def test(dataloader, model, loss_fn):
 # X = X.reshape((1,len(X),1))
 # y = X
 
-# simple pendulum with potential input
+# getriebe
+# import ode model from getriebe.py file
+func = HD_friction_compliance
 
-def func(y,t,u,g):
-    l = 1
-
-    # res = [y[1], -(g/l) * np.sin(y[0]) + u[0] + u[1]]
-    res = [y[1], -(g/l) * np.sin(y[0]) + u[0]]
-    return res
-
-# [angle'_init, angle_init]
-y0 = [0, 0.1]
-samples = 3000
+# theta_wg, theta_fs, d_theta_wg, d_theta_fs
+y0 = [0,0,0,0]
+samples = 500
 dt = 0.01
 
 # if parameters should vary in time, give them as lists like this for [[par1(t=0),par2(t=0)], [par1(t=1),par2(t=1)], ... ]; just append them as list, then transpose
 # if single constant, just give them as one value
 u = []
-u.append([0]*samples)
+# needs to be be 0.28 <= u <=0.6
+u.append([0.28]*samples)
 # u.append([np.sin(x) for x in np.arange(0, samples*dt,dt)])
 u = np.array(u)
 u = u.T
-g = 9.81
 
 # give input, then parameters (both as tuples); inputs = things the RNN/model gets as input as well, parameters = things the model is supposed to learn (potential changes in the system)
-x = Gen(func,(u,),(g,),y0,dt,samples)
+x = Gen(func,(u,), (),y0,dt,samples)
 x.generate()
 x.transform()
 
@@ -188,8 +184,8 @@ print("Done!")
 _,ax = plt.subplots(3)
 ax[0].plot(loss_vals)
 ax[0].set_title("loss")
-ax[1].plot(y_test[0])
+ax[1].plot(y_test[0,:]*180/np.pi)
 ax[1].set_title("ground truth")
-ax[2].plot(test_results[0][0])
+ax[2].plot(test_results[0][0]*180/np.pi)
 ax[2].set_title("predictions")
 plt.show()

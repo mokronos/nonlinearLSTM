@@ -18,6 +18,11 @@ Trying to train LSTMs for non-linear models.
 - https://towardsdatascience.com/a-long-short-term-memory-network-to-model-nonlinear-dynamic-systems-72f703885818
     - pretty much exactly what i want
     - author remarks that when not giving the ground truth at every time step as input (making prediction window longer) the results get way worse, as errors add up
+- https://www.researchgate.net/publication/327356232_Non-linear_system_modeling_using_LSTM_neural_network://www.researchgate.net/publication/327356232_Non-linear_system_modeling_using_LSTM_neural_networks 
+    - says that LSTMs don't work well when modeling nonlinear systems
+    - but their method works better
+- https://www.researchgate.net/publication/318333660_A_new_concept_using_LSTM_Neural_Networks_for_dynamic_system_identification
+    - last paper cited this as an example of LSTMs not working well for nonlinear modeling
 - https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=9105007
 - https://cpb-us-e1.wpmucdn.com/campuspress-test.yale.edu/dist/7/677/files/2016/09/paper_LSTM_2017ACC-1sz2yir.pdf
 - https://sci-hub.se/10.1007/s40435-020-00673-4 , A LSTM based prediction model for nonlinear dynamical systems with chaotic itinerancy

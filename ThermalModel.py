@@ -77,6 +77,7 @@ class thermal_network:
 # Simulation of thermal network class
 dt=0.01 # Zeitschrittweite
 thermalNet = thermal_network(R_12=0.035, R_23=0.02, C_1=5, C_2=45, C_3=40, Volumeflow=8, Tinlet=20 ,x_0=ones(9)*20)
+# change volume flow (use as input) and tinlet
 SolT = list()
 tvec=arange(0,10,dt) # Simulationszeit 10s und Zeitschrittweite dt
 u=[1000,1000,1000] # Waermestrom auf die Chips der Phasen U,V und W.
