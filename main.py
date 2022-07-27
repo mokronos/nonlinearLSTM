@@ -185,7 +185,7 @@ print("Done!")
 #################################################
 # plot results
 
-_,ax = plt.subplots(3)
+_ ,ax = plt.subplots(3)
 ax[0].plot(loss_vals)
 ax[0].set_title("loss")
 ax[1].plot(y_test[0])
