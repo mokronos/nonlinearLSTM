@@ -1,7 +1,10 @@
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 
 from data import Gen
+
+savepath = "data/"
 
 
 
@@ -31,6 +34,8 @@ x = Gen(func,(u,),(g,),y0,dt,samples)
 x.generate()
 x.transform()
 
-print(x.X.shape)
-f = pd.DataFrame(x.X)
-print(f.head())
+f = pd.DataFrame(x.X, columns=["dangle", "angle", "force_input"])
+f["g"] = g
+f["time"] = [dt*x for x in range(f.shape[0])]
+
+f.to_pickle(savepath + "pendulum.pkl")

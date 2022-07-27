@@ -1,10 +1,9 @@
 import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 import torch
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
-from data import Gen
-
-import matplotlib.pyplot as plt
 
 # set random seed
 torch.manual_seed(3)
@@ -83,50 +82,14 @@ def test(dataloader, model, loss_fn):
 
 
 #################################################
-# create training and test data
+# load training and test data
 
+savepath = "data/"
 
-# X 1s --> y time dependent but linear
-# y = np.array(list(range(1,10)))
-# X = np.array([1]*len(y))
-# y = y.reshape((1,len(y),1))
-# X = X.reshape((1,len(X),1))
+df = pd.read_pickle(savepath + "pendulum.pkl")
 
-# X = np.array(list(range(1,10)))
-# X = X.reshape((1,len(X),1))
-# y = X
-
-# simple pendulum with potential input
-
-def func(y,t,u,g):
-    l = 1
-
-    # res = [y[1], -(g/l) * np.sin(y[0]) + u[0] + u[1]]
-    res = [y[1], -(g/l) * np.sin(y[0]) + u[0]]
-    return res
-
-# [angle'_init, angle_init]
-y0 = [0, 0.1]
-samples = 3000
-dt = 0.01
-
-# if parameters should vary in time, give them as lists like this for [[par1(t=0),par2(t=0)], [par1(t=1),par2(t=1)], ... ]; just append them as list, then transpose
-# if single constant, just give them as one value
-u = []
-u.append([0]*samples)
-# u.append([np.sin(x) for x in np.arange(0, samples*dt,dt)])
-u = np.array(u)
-u = u.T
-g = 9.81
-
-# give input, then parameters (both as tuples); inputs = things the RNN/model gets as input as well, parameters = things the model is supposed to learn (potential changes in the system)
-x = Gen(func,(u,),(g,),y0,dt,samples)
-x.generate()
-x.transform()
-
-
-X = np.expand_dims(x.X, axis=0)
-y = np.expand_dims(x.y, axis=0)
+X = np.expand_dims(df[["dangle", "angle", "force_input"]][:-1], axis=0)
+y = np.expand_dims(df[["dangle", "angle", "force_input"]][1:], axis=0)
 
 cutoff = int(X.shape[1] * 2/3 )
 X_train, y_train = X[:,:cutoff], y[:,:cutoff]
@@ -185,11 +148,23 @@ print("Done!")
 #################################################
 # plot results
 
-_ ,ax = plt.subplots(3)
-ax[0].plot(loss_vals)
-ax[0].set_title("loss")
-ax[1].plot(y_test[0])
-ax[1].set_title("ground truth")
-ax[2].plot(test_results[0][0])
-ax[2].set_title("predictions")
+
+# _ ,ax = plt.subplots(3)
+# ax[0].plot(loss_vals)
+# ax[0].set_title("loss")
+# ax[1].plot(y_test[0])
+# ax[1].set_title("ground truth")
+# ax[2].plot(test_results[0][0])
+# ax[2].set_title("predictions")
+# plt.show()
+
+df[["pred_dangle", "pred_angle"]] = np.nan
+print(df.tail())
+df.loc[cutoff+1:, ["pred_dangle", "pred_angle"]] = test_results[0][0][:,:-1].numpy()
+print(df.tail())
+_ ,ax = plt.subplots(2)
+df[["dangle","pred_dangle"]][cutoff:].plot(ax = ax[0])
+ax[0].set_title("dangle")
+df[["angle","pred_angle"]][cutoff:].plot(ax = ax[1])
+ax[1].set_title("angle")
 plt.show()
