@@ -79,3 +79,21 @@ So we have multiple situations:
 - many-to-many: every time step has a input value
 - one-to-many: some or only the first time step has a input value, e.g. Initial value of a sine curve
 
+
+TODO:
+
+- create better skeleton for data generation and visualization
+    - pandas dataframe:
+        - columns as variables
+        - rows as timesteps (observations)
+        - extra column for different timeseries (1, 2, 3, etc.); potentially with different parameters of the differential equation
+        - define in data which variables are input and which are labels to define dataset independent of use case (if correctly defined)
+    - visualize functions:
+        - loss and maybe other metrics to better track training status, maybe use wandb.ai
+        - result: comparisons of prediction to output and error in same plot
+- go through checklist for training lstm's to make it converge to good solution:
+    - http://karpathy.github.io/2019/04/25/recipe/
+    - weights are fine, no vanishing gradient, at least with 300 samples, might be an issue if one training sequence is way longer --> might have to reduce resolution then
+    - simpler examples 1,2,3,4 as input --> 1,2,3,4 as labels converge
+    - loss goes down, error still huge, but loss function should be fine
+

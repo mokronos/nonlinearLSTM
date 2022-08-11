@@ -7,6 +7,7 @@ from data import Gen
 savepath = "data/"
 
 
+
 def func(y,t,u,g):
     l = 1
 

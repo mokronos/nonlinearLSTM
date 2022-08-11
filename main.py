@@ -31,10 +31,12 @@ class NeuralNetwork(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
         super().__init__()
         self.lstm = nn.LSTM(input_size, hidden_size, batch_first=True)
+        self.lstm2 = nn.LSTM(hidden_size, hidden_size, batch_first=True)
         self.fc = nn.Linear(hidden_size,output_size)
 
     def forward(self, x):
         x,_ = self.lstm(x)
+        x,_ = self.lstm2(x)
         x = self.fc(x)
         return x
 
@@ -89,11 +91,14 @@ savepath = "data/"
 df = pd.read_pickle(savepath + "pendulum.pkl")
 
 X = np.expand_dims(df[["dangle", "angle", "force_input"]][:-1], axis=0)
-y = np.expand_dims(df[["dangle", "angle", "force_input"]][1:], axis=0)
+X[0,1:,:2] = 0
+y = np.expand_dims(df[["dangle", "angle"]][1:], axis=0)
 
-cutoff = int(X.shape[1] * 2/3 )
+# cutoff = int(X.shape[1] * 2/3 )
+cutoff = 200
 X_train, y_train = X[:,:cutoff], y[:,:cutoff]
-X_test, y_test = X[:,cutoff:], y[:,cutoff:]
+# X_test, y_test = X[:,cutoff:], y[:,cutoff:]
+X_test, y_test = X[:,:cutoff], y[:,:cutoff]
 # X_train, y_train = X[:,:6], y[:,:6]
 # X_test, y_test = X[:,:6], y[:,:6]
 # print(X_train)
@@ -124,8 +129,8 @@ output_size = y_train.shape[2]
 model = NeuralNetwork(input_size,hidden_size,output_size).to(device)
 print(model)
 
-epochs = 1000
-lr = 1e-1
+epochs = 100
+lr = 1e-4
 loss_fn = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
@@ -148,23 +153,31 @@ print("Done!")
 #################################################
 # plot results
 
+# for param in model.parameters():
+#     print(param.data)
 
-# _ ,ax = plt.subplots(3)
-# ax[0].plot(loss_vals)
-# ax[0].set_title("loss")
-# ax[1].plot(y_test[0])
-# ax[1].set_title("ground truth")
-# ax[2].plot(test_results[0][0])
-# ax[2].set_title("predictions")
-# plt.show()
+plt.plot(loss_vals)
+plt.title("loss")
+plt.show()
 
 df[["pred_dangle", "pred_angle"]] = np.nan
 print(df.tail())
-df.loc[cutoff+1:, ["pred_dangle", "pred_angle"]] = test_results[0][0][:,:-1].numpy()
+# df.loc[cutoff+1:, ["pred_dangle", "pred_angle"]] = test_results[0][0].numpy()
+df.loc[:cutoff-1, ["pred_dangle", "pred_angle"]] = test_results[0][0].numpy()
+df["rmse_angle"] = ((df.angle - df.pred_angle)**2).mean() ** 0.5
+df["rmse_dangle"] = ((df.dangle - df.pred_dangle)**2).mean() ** 0.5
+df["rmse_dangle"] = df.dangle - df.pred_dangle
 print(df.tail())
 _ ,ax = plt.subplots(2)
-df[["dangle","pred_dangle"]][cutoff:].plot(ax = ax[0])
+# df[["dangle","pred_dangle"]][cutoff:].plot(ax = ax[0])
+df[["dangle","pred_dangle","rmse_dangle"]][:cutoff].plot(ax = ax[0])
+ax[0].set(ylabel="rad/s")
 ax[0].set_title("dangle")
-df[["angle","pred_angle"]][cutoff:].plot(ax = ax[1])
+# df[["angle","pred_angle"]][cutoff:].plot(ax = ax[1])
+df[["angle","pred_angle", "rmse_angle"]][:cutoff].plot(ax = ax[1])
+ax[1].set(ylabel="rad")
 ax[1].set_title("angle")
+for ax in ax.flat:
+    ax.set(xlabel="timestep")
+    ax.grid()
 plt.show()
