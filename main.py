@@ -129,7 +129,7 @@ output_size = y_train.shape[2]
 model = NeuralNetwork(input_size,hidden_size,output_size).to(device)
 print(model)
 
-epochs = 100
+epochs = 500
 lr = 1e-4
 loss_fn = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=lr)
@@ -158,23 +158,22 @@ print("Done!")
 
 plt.plot(loss_vals)
 plt.title("loss")
-plt.show()
 
 df[["pred_dangle", "pred_angle"]] = np.nan
-print(df.tail())
 # df.loc[cutoff+1:, ["pred_dangle", "pred_angle"]] = test_results[0][0].numpy()
 df.loc[:cutoff-1, ["pred_dangle", "pred_angle"]] = test_results[0][0].numpy()
 df["rmse_angle"] = ((df.angle - df.pred_angle)**2).mean() ** 0.5
+df["error_angle"] = df.angle - df.pred_angle
 df["rmse_dangle"] = ((df.dangle - df.pred_dangle)**2).mean() ** 0.5
-df["rmse_dangle"] = df.dangle - df.pred_dangle
-print(df.tail())
+df["error_dangle"] = df.dangle - df.pred_dangle
+print(df.head())
 _ ,ax = plt.subplots(2)
 # df[["dangle","pred_dangle"]][cutoff:].plot(ax = ax[0])
-df[["dangle","pred_dangle","rmse_dangle"]][:cutoff].plot(ax = ax[0])
+df[["dangle","pred_dangle","error_dangle"]][:cutoff].plot(ax = ax[0], color=["blue", "orange", 'mediumvioletred'])
 ax[0].set(ylabel="rad/s")
 ax[0].set_title("dangle")
 # df[["angle","pred_angle"]][cutoff:].plot(ax = ax[1])
-df[["angle","pred_angle", "rmse_angle"]][:cutoff].plot(ax = ax[1])
+df[["angle","pred_angle", "error_angle"]][:cutoff].plot(ax = ax[1], color=["blue", "orange", 'mediumvioletred'])
 ax[1].set(ylabel="rad")
 ax[1].set_title("angle")
 for ax in ax.flat:
