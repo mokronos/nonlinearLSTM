@@ -64,8 +64,15 @@ Trying to train LSTMs for non-linear models.
 
 - input: 0 --> n, [batch size, sequence length (number of time steps) , number of features at every time step] (batch size = number of different sequences)
     - features: inputs of dynamic systems (current/voltage or mechanical force)
-    - how to encode initial conditions? Give them as inputs, then make them 0
+    - how to encode initial conditions? Give them as inputs, then make them 0 when no values available
+- intermediates:
+    - naive solution would be to give the output of the last time step as input to the current time step
+    - however this information should be encoded in the hidden state of the LSTM
+    - so we can as well just make some inputs "initial conditions" and set these to 0 after the first time steps
+    - the rest should be learned by the LSTM
 - output: 0 --> n, any number of values the function would predict
+
+This means a system with no inputs and a starting condition will have one input for a few time steps, then none and the information of the last time steps is encoded in the hidden and cell states of the LSTM however it wants the history to be encoded.
 
 A system is only time dependent (time variant), if the system (not the input) varies in time.
 
@@ -79,21 +86,30 @@ So we have multiple situations:
 - many-to-many: every time step has a input value
 - one-to-many: some or only the first time step has a input value, e.g. Initial value of a sine curve
 
+### model
 
-TODO:
+
+## TODO:
 
 - create better skeleton for data generation and visualization
     - pandas dataframe:
-        - columns as variables
-        - rows as timesteps (observations)
-        - extra column for different timeseries (1, 2, 3, etc.); potentially with different parameters of the differential equation
-        - define in data which variables are input and which are labels to define dataset independent of use case (if correctly defined)
+        - columns as variables, done
+        - rows as timesteps (observations), done
+        - extra column for different timeseries (1, 2, 3, etc.); potentially with different parameters of the differential equation, TODO
+            - what variation of inputs?, only learn one input (e.g. Only one "setting", probably vary impulse)
+        - define in data which variables are input and which are labels to define dataset independent of use case (if correctly defined) TODO
     - visualize functions:
-        - loss and maybe other metrics to better track training status, maybe use wandb.ai
-        - result: comparisons of prediction to output and error in same plot
+        - loss and maybe other metrics to better track training status, maybe use wandb.ai, training and test loss plotted;
+            - TODO: use validation set as well 60/20/20 split
+        - result: comparisons of prediction to output and error in same plot, TODO started to write prediction file, to load trained model and compare to ground truth
 - go through checklist for training lstm's to make it converge to good solution:
-    - http://karpathy.github.io/2019/04/25/recipe/
-    - weights are fine, no vanishing gradient, at least with 300 samples, might be an issue if one training sequence is way longer --> might have to reduce resolution then
-    - simpler examples 1,2,3,4 as input --> 1,2,3,4 as labels converge
-    - loss goes down, error still huge, but loss function should be fine
+    - http://karpathy.github.io/2019/04/25/recipe/ half done, TODO generalization
+        - use more data (longer training times, 10 min already annoying for quick iteration, maybe just write theory part in latex during that time)
+        - need better setup for saving config for current model, settings (weird stuff with pytorch load) and better for reproducibility
+    - weights are fine, no vanishing gradient, at least with 300 samples, might be an issue if one training sequence is way longer --> might have to reduce resolution then, done (using low sequence length, might be an issue later)
+    - simpler examples 1,2,3,4 as input --> 1,2,3,4 as labels converge, done (simple examples work well)
+    - loss goes down, error still huge, but loss function should be fine (train/test loss plot is good information)
 
+
+~ Deadline: mitte nov
+20.6. anmeldung

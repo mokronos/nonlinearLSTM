@@ -24,28 +24,7 @@ class NeuralNetwork(nn.Module):
         x = self.fc(x)
         return x
 
-#################################################
-# define training and test loops (pretty much default from pytorch quickstart)
-
-def train(dataloader, model, loss_fn, optimizer):
-    model.train()
-    acc_loss = 0
-    for batch, (X, y) in enumerate(dataloader):
-        X, y = X.to(device), y.to(device)
-
-        # Compute prediction error
-        pred = model(X)
-        loss = loss_fn(pred, y)
-        acc_loss += loss.item()
-
-        # Backpropagation
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-    
-    return acc_loss/len(dataloader)
-
-
+# test function
 def test(dataloader, model, loss_fn):
     num_batches = len(dataloader)
     model.eval()
@@ -58,8 +37,6 @@ def test(dataloader, model, loss_fn):
     test_loss /= num_batches
     # print(f"Test Error: \n , Avg loss: {test_loss:>8f} \n")
     return test_loss
-
-
 #################################################
 # load training and test data
 
@@ -74,15 +51,12 @@ targets=["torque_in", "torque_out", "torque_in_d", "torque_out_d"]
 samples = len(df)
 ratio = 0.8
 cutoff = int(samples*ratio)
-batch_size = 3
+batch_size = 1
 
-df_train = df[:cutoff]
-df_test = df[cutoff:]
+df_test = df[cutoff+1]
 
-ds_train = create_dataset(df_train, features, targets, 3, 6)
-ds_test = create_dataset(df_test, features, targets, 3, 6)
+ds_test = create_dataset(df_test, features, targets, 3, 100)
 
-train_dataloader = DataLoader(ds_train, batch_size=batch_size, shuffle=True)
 test_dataloader = DataLoader(ds_test, batch_size=batch_size, shuffle=True)
 
 #################################################
@@ -92,6 +66,12 @@ global device
 device = "cuda" if torch.cuda.is_available() else "cpu"
 # device = "cpu"
 print(f"Using {device} device")
+
+# load model
+model_dir = "models/"
+version = "1"
+model_ext = "pt"
+model_path = f"{model_dir}{name}{version}{model_ext}"
 
 # number of features
 input_size = len(features) + len(targets)
@@ -103,41 +83,12 @@ output_size = len(targets)
 model = NeuralNetwork(input_size,hidden_size,output_size).to(device)
 print(model)
 
-epochs = 200
-lr = 3e-4
 loss_fn = nn.MSELoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
-# some lists for results
-train_loss = []
-test_loss = []
-
-for t in range(epochs):
-    
-    if t%100==0:
-        print(f"Epoch {t+1}\n-------------------------------")
-    train_loss.append(train(train_dataloader, model, loss_fn, optimizer))
-
-    test_loss.append(test(test_dataloader, model, loss_fn))
-
-print("Done!")
-
-#################################################
-# save model
-
-model_dir = "models/"
-version = "1"
-model_ext = "pt"
-model_path = f"{model_dir}{name}{version}{model_ext}"
-
-torch.save(model.state_dict(), model_path)
+model.load_state_dict(torch.load(model_path))
+model.eval()
 
 
-#################################################
-# plot results
+loss = test(test_dataloader, model, loss_fn)
 
-plt.plot(train_loss)
-plt.plot(test_loss)
-plt.legend(["train_loss", "test_loss"])
-
-plt.show()
+print(loss)

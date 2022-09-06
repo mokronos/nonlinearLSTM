@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 class Gen:
     """
     Generator for input and output data from a given differential equation
+    Outputs 2D array with states and inputs at every time step (state1, state2, input1, input2)
     """
 
     def __init__(self, func, inputs, parameters, y0, dt, samples):

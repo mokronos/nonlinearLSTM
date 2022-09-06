@@ -79,6 +79,7 @@ if __name__ == "__main__":
     i_m = 0.28          # [A] 0.28 <= i_m <= 0.6
 
     x = odeint(HD_friction_compliance, [0,0,0,0],t, args=(i_m,))
+    print(x.shape)
 
 
     fig, axs = plt.subplots(2)
