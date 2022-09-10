@@ -63,7 +63,7 @@ def check_overwrite(name, path):
                         return False
     return True
 
-def save_dataset(df, config, f, name, path = "data/"):
+def save_dataset(df, config, name, path = "data/"):
     if check_overwrite(name, path):
         savepath = f"{path}{name}"
         shutil.rmtree(savepath)
@@ -72,10 +72,13 @@ def save_dataset(df, config, f, name, path = "data/"):
 
         with open(f'{savepath}/{name}.yaml', 'w') as fp:
             yaml.dump(config, fp, indent=2)
-            yaml.dump(f, fp,  indent=2, default_style="|")
 
-def foo(a,b):
-    return a+b
+def load_dataset(name, path = "data/"):
+    savepath = f"{path}{name}"
+    df = pd.read_csv(f"{savepath}/{name}.csv")
+    with open(f'{savepath}/{name}.yaml', 'r') as stream:
+        config = yaml.safe_load(stream)
+    return df, config
 
 if __name__ == "__main__":
     length = 10
@@ -95,11 +98,9 @@ if __name__ == "__main__":
 
     print(raw.head())
 
-    f = inspect.getsource(foo)
     config = {"length": length, "features":features, "targets":targets}
-    f = {"function": f}
 
-    save_dataset(raw, config,f, "testing")
+    save_dataset(raw, config, "testing")
 
     # plt.scatter(t, data[0][0])
     # plt.scatter(t, data[0][1])
