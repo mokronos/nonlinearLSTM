@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import torch
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
-from helper import create_dataset
+from helper import create_dataset, load_dataset
 
 # set random seed
 torch.manual_seed(3)
@@ -40,16 +40,10 @@ def test(dataloader, model, loss_fn):
 #################################################
 # load training and test data
 
-data_path = "data/"
-ext = ".pkl"
-name = "getriebe"
-df = pd.read_pickle(f"{data_path}{name}{ext}")
-print(df.head())
-features = ["impulse"]
-targets=["torque_in", "torque_out", "torque_in_d", "torque_out_d"]
-
-samples = len(df)
+name = "pendulum_simple"
+df, config = load_dataset(name)
 ratio = 0.8
+samples = config["sampels"]
 cutoff = int(samples*ratio)
 batch_size = 1
 
