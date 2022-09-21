@@ -63,8 +63,8 @@ def HD_friction_compliance(x,t,i_m):
     T_wg = T_k
     T_fs = N*T_k - T_b
 
-    # differential equations
-    f[0] = d_theta_wg
+    # differential equations (rotations) ["d_rot_out", "d_rot_in", "rot_out", "rot_in"]
+    f[0] = d_theta_wg 
     f[1] = d_theta_fs
     f[2] = 1.0/J_in*(K_t*i_m - b_in*d_theta_wg - T_wg);
     f[3] = 1.0/J_out*(-b_out*d_theta_fs - T_fs + T_load);
@@ -76,10 +76,12 @@ if __name__ == "__main__":
 
     t = np.arange(0, 5, 0.001)
 
-    i_m = 0.28          # [A] 0.28 <= i_m <= 0.6
+    i_m = 0.6          # [A] 0.28 <= i_m <= 0.6
 
     x = odeint(HD_friction_compliance, [0,0,0,0],t, args=(i_m,))
+    print(t.shape)
     print(x.shape)
+    print(x)
 
 
     fig, axs = plt.subplots(2)

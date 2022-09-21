@@ -25,13 +25,16 @@ class Gen:
         for i in range(self.samples):
 
             # start each time from 0 because we change starting conditions each iteration, time dependent variables (input u or other parameters) are iterated via samples i
+
             t = [0, self.dt]
             
             # parameters get either unpacked into a tuple for that specific sample (time step) if they are a np.ndarray or are given as just one value
-
+            inp = [inp[i,:] if isinstance(inp,np.ndarray) else inp for inp in self.inputs]
+            if len(inp[0]) == 1:
+                inp = [inp[0][0]]
+            par = list(self.parameters)
             args = tuple(
-                    [inp[i,:] if isinstance(inp,np.ndarray) else inp for inp in self.inputs] + 
-                    [par[i,:] if isinstance(par,np.ndarray) else par for par in self.parameters] 
+                    inp + par
                 )
             result = odeint(self.func, self.y0, t, args= args)
             self.y0 = result[1]
@@ -87,6 +90,7 @@ if __name__ == "__main__":
     u.append([0]*samples)
     u.append([1]*samples)
     u = np.array(u)
+    print(u)
     u = u.T
     g = 9.81
     

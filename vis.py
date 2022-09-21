@@ -1,18 +1,14 @@
 import matplotlib.pyplot as plt
 import pandas as pd
+from helper import load_dataset
 
 
-def plot_results(data, labels):
-    
-    plt.plot(data)
-    plt.show()
+name = "thermal_simple"
+df, config = load_dataset(name)
 
-
-x = 3
-
-savepath = "data/"
-
-# df = pd.read_pickle(savepath + "pendulum.pkl")
-df = pd.read_pickle("data/pendulum.pkl")
-df.head()
-print(df["angle"])
+print(df)
+for i, data in df.groupby(level=0):
+    print(data.head())
+    data.plot()
+# df.loc[3].plot()
+plt.show()

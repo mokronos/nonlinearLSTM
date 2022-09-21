@@ -3,8 +3,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import torch
 from torch import nn
-from torch.utils.data import DataLoader, Dataset
-from helper import create_dataset
+from torch.utils.data import DataLoader
+from helper import load_dataset, create_dataset
 
 # set random seed
 torch.manual_seed(3)
@@ -63,24 +63,19 @@ def test(dataloader, model, loss_fn):
 #################################################
 # load training and test data
 
-data_path = "data/"
-ext = ".pkl"
-name = "getriebe"
-df = pd.read_pickle(f"{data_path}{name}{ext}")
-print(df.head())
-features = ["impulse"]
-targets=["torque_in", "torque_out", "torque_in_d", "torque_out_d"]
+name = "pendulum_simple"
+df, config = load_dataset(name)
 
-samples = len(df)
+# train/test ratio
 ratio = 0.8
-cutoff = int(samples*ratio)
-batch_size = 3
+cutoff = int(len(df)*ratio)
+batch_size = 20
 
 df_train = df[:cutoff]
 df_test = df[cutoff:]
 
-ds_train = create_dataset(df_train, features, targets, 3, 6)
-ds_test = create_dataset(df_test, features, targets, 3, 6)
+ds_train = create_dataset(df_train, config["inputs"], config["outputs"], 3, 20)
+ds_test = create_dataset(df_test, config["inputs"], config["outputs"], 3, 20)
 
 train_dataloader = DataLoader(ds_train, batch_size=batch_size, shuffle=True)
 test_dataloader = DataLoader(ds_test, batch_size=batch_size, shuffle=True)
@@ -94,11 +89,11 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using {device} device")
 
 # number of features
-input_size = len(features) + len(targets)
+input_size = len(config["inputs"]) + len(config["outputs"])
 # whatever is good? to be determined
 hidden_size = 500
 # number of outputs
-output_size = len(targets)
+output_size = len(config["outputs"])
 
 model = NeuralNetwork(input_size,hidden_size,output_size).to(device)
 print(model)
@@ -126,9 +121,11 @@ print("Done!")
 # save model
 
 model_dir = "models/"
+dataset_name = config["name"]
+model_name = "testing"
 version = "1"
-model_ext = "pt"
-model_path = f"{model_dir}{name}{version}{model_ext}"
+model_ext = ".pt"
+model_path = f"{model_dir}{dataset_name}_{model_name}{version}{model_ext}"
 
 torch.save(model.state_dict(), model_path)
 
