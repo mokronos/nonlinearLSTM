@@ -63,16 +63,17 @@ def test(dataloader, model, loss_fn):
 #################################################
 # load training and test data
 
-name = "pendulum_simple"
+name = "getriebe_simple"
 df, config = load_dataset(name)
 
 # train/test ratio
 ratio = 0.8
-cutoff = int(len(df)*ratio)
-batch_size = 20
+num_series = len(df.groupby(level=0))
+cutoff = int(num_series*ratio)
+batch_size = 100
 
-df_train = df[:cutoff]
-df_test = df[cutoff:]
+df_train = df.loc[:cutoff]
+df_test = df.loc[cutoff:]
 
 ds_train = create_dataset(df_train, config["inputs"], config["outputs"], 3, 20)
 ds_test = create_dataset(df_test, config["inputs"], config["outputs"], 3, 20)
@@ -98,7 +99,7 @@ output_size = len(config["outputs"])
 model = NeuralNetwork(input_size,hidden_size,output_size).to(device)
 print(model)
 
-epochs = 200
+epochs = 100
 lr = 3e-4
 loss_fn = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=lr)
@@ -109,7 +110,7 @@ test_loss = []
 
 for t in range(epochs):
     
-    if t%100==0:
+    if t%10==0:
         print(f"Epoch {t+1}\n-------------------------------")
     train_loss.append(train(train_dataloader, model, loss_fn, optimizer))
 

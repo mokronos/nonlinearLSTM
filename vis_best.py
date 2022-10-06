@@ -3,7 +3,7 @@ import pandas as pd
 from helper import load_dataset
 
 
-name = "pendulum_2init0force"
+name = "pendulum_3init0force"
 df, config = load_dataset(name)
 
 for i in range(len(set(df.index.get_level_values(0)))):

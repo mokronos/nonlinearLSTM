@@ -68,11 +68,12 @@ df, config = load_dataset(name)
 
 # train/test ratio
 ratio = 0.8
-cutoff = int(len(df)*ratio)
+num_series = len(df.groupby(level=0))
+cutoff = int(num_series*ratio)
 batch_size = 100
 
-df_train = df[:cutoff]
-df_test = df[cutoff:]
+df_train = df.loc[:cutoff]
+df_test = df.loc[cutoff:]
 
 ds_train = create_dataset(df_train, config["inputs"], config["outputs"], 3, 20)
 ds_test = create_dataset(df_test, config["inputs"], config["outputs"], 3, 20)

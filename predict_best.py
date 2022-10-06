@@ -1,3 +1,4 @@
+import json
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -33,21 +34,38 @@ def test(dataloader, model, loss_fn):
         for X, y in dataloader:
             X, y = X.to(device), y.to(device)
             pred = model(X)
-            test_loss += loss_fn(pred, y).item()
-    test_loss /= num_batches
-    # print(f"Test Error: \n , Avg loss: {test_loss:>8f} \n")
-    return test_loss
-#################################################
-# load training and test data
 
-name = "pendulum_2init0force"
-df, config = load_dataset(name)
-ratio = 0.5
+            # add up loss
+            test_loss += loss_fn(pred, y).item()
+
+    # return average loss over batches
+    return test_loss / num_batches
+
+#################################################
+# load dataset for test data and variable information
+dataset_name = "pendulum_3init0force"
+df, config = load_dataset(dataset_name)
+
+# define experiment identifiers
+descripor = "test"
+version = "1"
+dataset_name = config["name"]
+# create full name for folder containing experiment
+experiment_name = f"{dataset_name}_{descripor}_{version}"
+
+# load json to figure out what model is the best one
+path = "models/"
+savepath = f"{path}{experiment_name}"
+with open(f"{savepath}/best_model.json", 'r') as stream:
+    best_model = json.load(stream)
+
+# load best model config
+with open(f"{savepath}/{experiment_name}_{best_model['best_model_name']}.json", 'r') as stream:
+    model_config = json.load(stream)
+
+print(model_config)
 samples = config["samples"]
-num_series = len(df.groupby(level=0))
-cutoff = int(num_series*ratio)
 batch_size = 1
-cutoff = 1
 df_test = df.loc[[cutoff]]
 print(df_test)
 

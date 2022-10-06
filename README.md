@@ -93,23 +93,43 @@ So we have multiple situations:
 
 - create better skeleton for data generation and visualization
     - pandas dataframe:
-        - columns as variables, done
-        - rows as timesteps (observations), done
-        - extra column for different timeseries (1, 2, 3, etc.); potentially with different parameters of the differential equation, TODO
+        - extra column for different timeseries (1, 2, 3, etc.); potentially with different parameters of the differential equation, TODO -> DONE 
             - what variation of inputs?, only learn one input (e.g. Only one "setting", probably vary impulse)
-        - define in data which variables are input and which are labels to define dataset independent of use case (if correctly defined) TODO
-    - visualize functions:
-        - loss and maybe other metrics to better track training status, maybe use wandb.ai, training and test loss plotted;
-            - TODO: use validation set as well 60/20/20 split
-        - result: comparisons of prediction to output and error in same plot, TODO started to write prediction file, to load trained model and compare to ground truth
+        - define in data which variables are input and which are labels to define dataset independent of use case (if correctly defined) TODO -> DONE
+        - visualize functions: TODO (kinda done, need to either do it manually, or work with dataframes and then just print dataframe basically)
+        - result: comparisons of prediction to output and error in same plot, TODO started to write prediction file, to load trained model and compare to ground truth --> DONE 
+        - loss and maybe other metrics to better track training status, training and test loss plotted DONE
+        - TODO: use validation set as well 60/20/20 split, validation only useful when hyperparameter tuning
+        - Tune/go over Hyperparameters:
+            - 
+
+
 - go through checklist for training lstm's to make it converge to good solution:
     - http://karpathy.github.io/2019/04/25/recipe/ half done, TODO generalization
-        - use more data (longer training times, 10 min already annoying for quick iteration, maybe just write theory part in latex during that time)
-        - need better setup for saving config for current model, settings (weird stuff with pytorch load) and better for reproducibility
-    - weights are fine, no vanishing gradient, at least with 300 samples, might be an issue if one training sequence is way longer --> might have to reduce resolution then, done (using low sequence length, might be an issue later)
-    - simpler examples 1,2,3,4 as input --> 1,2,3,4 as labels converge, done (simple examples work well)
-    - loss goes down, error still huge, but loss function should be fine (train/test loss plot is good information)
+        - use more data (longer training times, 10 min already annoying for quick iteration, maybe just write theory part in latex during that time, better with bigger batch size/parallelization) --> DONE
+        - need better setup for saving config for current model, settings (weird stuff with pytorch load) and better for reproducibility --> TODO
+        - thermal model: inital predictions not the same as inital conditions given to the model
+            - model just didnt learn to just let the initial condition inputs flow through on the first few "init" timesteps, and instead sets them to something else.
+            - or a bug (however other 2 models dont have that problem)
+            - should figure out in general if network has the capacity to learn function (overfit it)
 
+- keep it simple:
+    - one simple input, keep most stuff constant, if not all
+    - overfit
+    - slides for data generation, training, evaluation for pendulum, then same results for thermal and transmission
+
+Presentation:
+-          Problemstellung (z.B. Pendel)
+
+-          Angesetztes Netz und Methode
+
+-          Erstellung der Trainingssets, Verlauf und Variationen
+
+-          Trainingserfolg und Konvergenz, Plot Loss über Iterationen
+
+-          Prediction vs. Trainingsset bei bestem Hyperparameterset
+
+-          Validierung an neuem Arbeitspunkt bzw. Verlauf, welcher aus dem Trainingsset ausgenommen wurde
 
 ~ Deadline: mitte nov
 20.6. anmeldung

@@ -1,4 +1,5 @@
 import os
+import random
 import inspect
 import shutil
 import yaml
@@ -86,6 +87,17 @@ def create_dataset(df, input_names, output_names, init = 1, length = 2):
 
     return data
 
+def split_sets(ratio, num_series):
+    test_size = max(int(ratio[2] * num_series), 1)
+    val_size = max(int(ratio[1] * num_series), 1)
+    train_size = num_series - test_size - val_size
+
+    indices = list(range(num_series))
+    random.shuffle(indices)
+    test_idx = [indices.pop(0) for _ in range(test_size)]
+    val_idx = [indices.pop(0) for _ in range(val_size)]
+    train_idx = [indices.pop(0) for _ in range(train_size)]
+    return train_idx, val_idx, test_idx
 
 def check_overwrite(name, path):
     with os.scandir(path) as entries:
@@ -122,6 +134,22 @@ def load_dataset(name, path = "data/"):
         config = json.load(stream)
     return df, config
 
+def prepare_folder(name, path = "models/"):
+    if check_overwrite(name, path):
+        savepath = f"{path}{name}"
+        try:
+            shutil.rmtree(savepath)
+        except FileNotFoundError:
+            pass
+        print(savepath)
+        os.makedirs(savepath, exist_ok=True)
+
+def save_model(savepath, model, model_config):
+    model_name = model_config["name"]
+    torch.save(model.state_dict(), f"{savepath}/{model_name}.pt")
+
+    with open(f'{savepath}/{model_name}.json', 'w') as fp:
+        json.dump(model_config, fp, indent=6)
 def gen_step(when, height, length):
     """
     create step impulse at certain (percent of total length [length]) points [when]
@@ -228,9 +256,9 @@ if __name__ == "__main__":
 
     print(raw.head())
 
-    config = {"length": length, "features":features, "targets":targets}
+    model_config = {"length": length, "features":features, "targets":targets}
 
-    save_dataset(raw, config, "testing")
+    save_dataset(raw, model_config, "testing")
 
     # plt.scatter(t, data[0][0])
     # plt.scatter(t, data[0][1])
