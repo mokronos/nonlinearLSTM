@@ -1,12 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import torch
-from torch.utils.data.dataloader import DataLoader
-from helper import create_dataset, load_dataset, save_dataset, gen_data
+from helper import load_dataset, save_dataset, gen_data
 
 
 data_path = "data/"
-ext = ".pkl"
 
 
 def pend(y,t,u,g):
@@ -52,19 +49,7 @@ config = {
 data = gen_data(config, pend)
 save_dataset(data, config)
 
+df, config = load_dataset(config["name"])
 
-df, config = load_dataset("pend_test")
-
-
-torch.set_printoptions(precision=6)
 df.plot()
 plt.show()
-
-data = create_dataset(df, config["inputs"].keys(), config["outputs"])
-batch_size = 1
-dl = DataLoader(data, batch_size=batch_size, shuffle=False)
-
-for batch, (x,y) in enumerate(dl):
-    print(f"batch:{batch}")
-    print(f"x:{x}")
-    print(f"y:{y}")

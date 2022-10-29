@@ -4,6 +4,7 @@ import inspect
 import shutil
 import yaml
 import json
+from copy import deepcopy
 import torch
 from torch.utils.data import Dataset, DataLoader, ConcatDataset
 import numpy as np
@@ -28,6 +29,7 @@ class BasicDataset(Dataset):
 
 
         return self.features[index], self.targets[index]
+
 
 def create_dataset(df, input_names, output_names, init = 1, length = 2):
 
@@ -120,7 +122,7 @@ def save_dataset(df, config, path = "data/"):
             shutil.rmtree(savepath)
         except FileNotFoundError:
             pass
-        print(savepath)
+        print(f"saved dataset to: {savepath}")
         os.makedirs(savepath, exist_ok=True)
         df.to_csv(f"{savepath}/{name}.csv")
 
@@ -141,12 +143,12 @@ def prepare_folder(name, path = "models/"):
             shutil.rmtree(savepath)
         except FileNotFoundError:
             pass
-        print(savepath)
+        print(f"created {savepath}")
         os.makedirs(savepath, exist_ok=True)
 
-def save_model(savepath, model, model_config):
+def save_model(savepath, model_state, model_config):
     model_name = model_config["name"]
-    torch.save(model.state_dict(), f"{savepath}/{model_name}.pt")
+    torch.save(model_state, f"{savepath}/{model_name}.pt")
 
     with open(f'{savepath}/{model_name}.json', 'w') as fp:
         json.dump(model_config, fp, indent=6)

@@ -43,33 +43,34 @@ def test(dataloader, model, loss_fn):
 
 #################################################
 # load dataset for test data and variable information
-dataset_name = "pendulum_3init0force"
+dataset_name = "drag_step"
 df, config = load_dataset(dataset_name)
 
 # define experiment identifiers
-descripor = "test"
+descripor = "wholeseries"
 version = "1"
 dataset_name = config["name"]
 # create full name for folder containing experiment
 experiment_name = f"{dataset_name}_{descripor}_{version}"
 
 # load json to figure out what model is the best one
-path = "models/"
-savepath = f"{path}{experiment_name}"
+model_dir = "models/"
+savepath = f"{model_dir}{experiment_name}"
 with open(f"{savepath}/best_model.json", 'r') as stream:
     best_model = json.load(stream)
 
 # load best model config
+full_model_name = f"{experiment_name}_{best_model['best_model_name']}"
 with open(f"{savepath}/{experiment_name}_{best_model['best_model_name']}.json", 'r') as stream:
     model_config = json.load(stream)
 
-print(model_config)
 samples = config["samples"]
 batch_size = 1
-df_test = df.loc[[cutoff]]
-print(df_test)
+# df_test = df.loc[model_config["test_idx"]]
+print(model_config["test_idx"])
+df_test = df.loc[[0]]
 
-ds_test = create_dataset(df_test, config["inputs"], config["outputs"], 3, samples - 1)
+ds_test = create_dataset(df_test, config["inputs"], config["outputs"], 1, samples - 1)
 
 test_dataloader = DataLoader(ds_test, batch_size=batch_size, shuffle=True)
 
@@ -82,12 +83,8 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using {device} device")
 
 # load model
-model_dir = "models/"
-dataset_name = config["name"]
-model_name = "simple"
-version = "1"
 model_ext = ".pt"
-model_path = f"{model_dir}{dataset_name}_{model_name}{version}{model_ext}"
+model_path = f"{model_dir}{experiment_name}/{full_model_name}{model_ext}"
 
 # number of features
 input_size = len(config["inputs"]) + len(config["outputs"])
@@ -113,11 +110,11 @@ for X,y in test_dataloader:
 fig, ax = plt.subplots(2)
 ax[0].plot(predictions[0][0], label=[f"pred_{x}" for x in config["outputs"]])
 ax[0].plot(ground_truth[0][0], "--", label=[f"gt_{x}" for x in config["outputs"]])
-ax[0].set_ylabel("radians")
+ax[0].set_ylabel(r"m/s")
 ax[0].set_xlabel("time in 0.01s steps")
 ax[0].legend()
 ax[1].plot((ground_truth[0][0] - predictions[0][0])**2, label=[f"squ_error_{x}" for x in config["outputs"]])
-ax[1].set_ylabel("radians^2")
+ax[1].set_ylabel(r"m^2/s^2")
 ax[1].set_xlabel("time in 0.01s steps")
 ax[1].legend()
 plt.show()

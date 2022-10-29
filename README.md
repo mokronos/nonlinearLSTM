@@ -131,5 +131,14 @@ Presentation:
 
 -          Validierung an neuem Arbeitspunkt bzw. Verlauf, welcher aus dem Trainingsset ausgenommen wurde
 
+
+iguana
+sklearn --> normalization, scaler (fit --> transform), ausgang und eingang normieren, je nach activierungsfunktion
+3 kraftsprünge (100,200,300)
+direkt
+
+andere "beispiele" für loss und prediction bis Montag
+
+
 ~ Deadline: mitte nov
 20.6. anmeldung
