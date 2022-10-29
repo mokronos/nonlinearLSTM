@@ -6,40 +6,11 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
 from helper import create_dataset, load_dataset
+from models import *
+from train import test_loop
 
 # set random seed
 torch.manual_seed(3)
-
-#################################################
-# NN architecture
-class NeuralNetwork(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size):
-        super().__init__()
-        self.lstm = nn.LSTM(input_size, hidden_size, batch_first=True)
-        self.lstm2 = nn.LSTM(hidden_size, hidden_size, batch_first=True)
-        self.fc = nn.Linear(hidden_size,output_size)
-
-    def forward(self, x):
-        x,_ = self.lstm(x)
-        x,_ = self.lstm2(x)
-        x = self.fc(x)
-        return x
-
-# test function
-def test(dataloader, model, loss_fn):
-    num_batches = len(dataloader)
-    model.eval()
-    test_loss = 0
-    with torch.no_grad():
-        for X, y in dataloader:
-            X, y = X.to(device), y.to(device)
-            pred = model(X)
-
-            # add up loss
-            test_loss += loss_fn(pred, y).item()
-
-    # return average loss over batches
-    return test_loss / num_batches
 
 #################################################
 # load dataset for test data and variable information
@@ -48,7 +19,7 @@ df, config = load_dataset(dataset_name)
 
 # define experiment identifiers
 descripor = "wholeseries"
-version = "1"
+version = "3"
 dataset_name = config["name"]
 # create full name for folder containing experiment
 experiment_name = f"{dataset_name}_{descripor}_{version}"
@@ -93,10 +64,10 @@ hidden_size = 500
 # number of outputs
 output_size = len(config["outputs"])
 
-model = NeuralNetwork(input_size,hidden_size,output_size).to(device)
+model = eval(model_config["arch"])(input_size,hidden_size,output_size).to(device)
 print(model)
 
-loss_fn = nn.MSELoss()
+loss_fn = torch.nn.MSELoss()
 
 model.load_state_dict(torch.load(model_path))
 model.eval()
@@ -118,6 +89,6 @@ ax[1].set_ylabel(r"m^2/s^2")
 ax[1].set_xlabel("time in 0.01s steps")
 ax[1].legend()
 plt.show()
-loss = test(test_dataloader, model, loss_fn)
+loss, _ = test_loop(test_dataloader, model, loss_fn, device)
 
 print(loss)

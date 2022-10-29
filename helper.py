@@ -114,8 +114,8 @@ def check_overwrite(name, path):
                         return False
     return True
 
-def save_dataset(df, config, path = "data/"):
-    name = config["name"]
+def save_dataset(df, data_config, path = "data/"):
+    name = data_config["name"]
     if check_overwrite(name, path):
         savepath = f"{path}{name}"
         try:
@@ -127,7 +127,7 @@ def save_dataset(df, config, path = "data/"):
         df.to_csv(f"{savepath}/{name}.csv")
 
         with open(f'{savepath}/{name}.json', 'w') as fp:
-            json.dump(config, fp, indent=6)
+            json.dump(data_config, fp, indent=6)
 
 def load_dataset(name, path = "data/"):
     savepath = f"{path}{name}"
@@ -152,6 +152,7 @@ def save_model(savepath, model_state, model_config):
 
     with open(f'{savepath}/{model_name}.json', 'w') as fp:
         json.dump(model_config, fp, indent=6)
+
 def gen_step(when, height, length):
     """
     create step impulse at certain (percent of total length [length]) points [when]
@@ -169,12 +170,12 @@ def gen_step(when, height, length):
     return out
 
 # inputs: jump points, 
-def gen_input(config):
+def gen_input(data_config):
 
     mem = {}
 
-    samples = config["samples"]
-    for inp, val in config["inputs"].items():
+    samples = data_config["samples"]
+    for inp, val in data_config["inputs"].items():
         mem[inp] = []
         for type, desc in val["types"].items():
 
@@ -196,19 +197,19 @@ def gen_input(config):
     for idx, sample in enumerate(comb):
         index = [(idx, i) for i in range(samples)]
         index = pd.MultiIndex.from_tuples(index, names=["series", "index"])
-        out_df = pd.DataFrame(np.array(sample).T, index= index, columns=config["inputs"].keys())
+        out_df = pd.DataFrame(np.array(sample).T, index= index, columns=data_config["inputs"].keys())
         df = pd.concat([df,out_df])
 
     return df
 
-def gen_data(config, func):
+def gen_data(data_config, func):
     """
     generate ode results from inputs and other config options set in config dict, and returns it as Dataframe
     """
 
     # generate input dataframe and read constants, need to change to work with multiple constants
-    input_df = gen_input(config)
-    constants = tuple(config["constants"].values())
+    input_df = gen_input(data_config)
+    constants = tuple(data_config["constants"].values())
 
     # init counter and resulting Dataframe
     counter = 0
@@ -217,51 +218,25 @@ def gen_data(config, func):
     # loop over "series" index
     for _, data in input_df.groupby(level=0):
         # loop over different initial conditions given
-        for init in config["init"]:
+        for init in data_config["init"]:
 
             # transform "inputs" array to fit in ode generator
-            inputs = data[config["inputs"].keys()].T.values.tolist()
+            inputs = data[data_config["inputs"].keys()].T.values.tolist()
             inputs = np.array(inputs).T
 
             # calculate ode results for one current series
-            x = Gen(func,(inputs,), constants, init,config["timestep"],config["samples"])
+            x = Gen(func,(inputs,), constants, init,data_config["timestep"],data_config["samples"])
             x.generate()
             x.transform()
 
             # create new multiindex for dataframe
-            index = [(counter, i) for i in range(config["samples"])]
+            index = [(counter, i) for i in range(data_config["samples"])]
             index = pd.MultiIndex.from_tuples(index, names=["series", "index"])
 
             # fill dataframe with new data and concat it with resulting dataframe to stack them above each other
-            df = pd.DataFrame(np.array(x.X), index= index, columns=config["outputs"] + list(config["inputs"].keys()))
+            df = pd.DataFrame(np.array(x.X), index= index, columns=data_config["outputs"] + list(data_config["inputs"].keys()))
             result = pd.concat([result,df])
 
             counter += 1
 
     return result
-
-if __name__ == "__main__":
-    length = 10
-    t = np.arange(0,length)
-    x = np.ones(length)
-    y = t**2 + x
-
-    raw = pd.DataFrame({"t": t, "y": y, "x": x})
-
-    features = ["x"]
-    targets = ["y"]
-
-    data = create_dataset(raw, features, targets, 2, 3)
-
-
-    dl = DataLoader(data, batch_size=1)
-
-    print(raw.head())
-
-    model_config = {"length": length, "features":features, "targets":targets}
-
-    save_dataset(raw, model_config, "testing")
-
-    # plt.scatter(t, data[0][0])
-    # plt.scatter(t, data[0][1])
-    # plt.show()

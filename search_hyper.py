@@ -15,36 +15,34 @@ random.seed(10)
 
 # load dataset
 name = "drag_step"
-df, config = load_dataset(name)
-
+df, data_config = load_dataset(name)
 
 # define experiment identifiers
 descripor = "wholeseries"
 version = "3"
-dataset_name = config["name"]
+dataset_name = data_config["name"]
 # create full name for folder containing experiment
 name = f"{dataset_name}_{descripor}_{version}"
-
 
 # define dict with config info to store in json
 experiment_config = {
         "name": name,
         "dataset_name" : dataset_name,
         "train_val_test_ratio" : [0.6, 0.2, 0.2],
-        "architechture" : "NeuralNetwork",
         "epochs" : 10,
         "context_length": 1,
-        "prediction_length": config["samples"] - 1,
+        "prediction_length": data_config["samples"] - 1,
         }
 
 # define experiment parameters (gets added to experiment_config later)
 lrs = [0.0001]
 # lrs = [0.003, 0.0003, 0.0001]
-batch_size = [1]
-hyper_desc = ["lr", "batch_size"]
+bs = [1]
+arch = ["TwoLayers"]
+hyper_desc = ["lr", "bs", "arch"]
 
 # get all combinations of params and put into dicts with descripors as keys
-hyper = list(itertools.product(lrs, batch_size))
+hyper = list(itertools.product(lrs, bs, arch))
 hyper = [{desc: par for desc, par in zip(hyper_desc, params)} for params in hyper]
 
 # create folders
@@ -90,23 +88,22 @@ best_epochs = {}
 
 for params in hyper:
 
-    lr = params["lr"]
-    batch_size = params["batch_size"]
+    param_desc = "".join([f"{desc}{par}" for desc, par in params.items()])
     model_config = experiment_config.copy()
-    model_config["name"] = f"{model_config['name']}_lr{lr}bs{batch_size}"
+    model_config["name"] = f"{model_config['name']}_{param_desc}"
     model_config.update(params)
 
-    best_state, train_loss_hist, val_loss_hist = train(df_train, df_val, config, model_config)
+    best_state, train_loss_hist, val_loss_hist = train(df_train, df_val, data_config, model_config)
 
     # save model
     save_model(savepath, best_state, model_config)
     print(f"saved {model_config['name']}!")
     
     # save train and val loss to plot comparison
-    train_dict[f"lr{lr}bs{batch_size}"] = train_loss_hist
-    val_dict[f"lr{lr}bs{batch_size}"] = val_loss_hist
-    best_val_losses[f"lr{lr}bs{batch_size}"] = np.nanmin(val_loss_hist)
-    best_epochs[f"lr{lr}bs{batch_size}"] = np.nanargmin(val_loss_hist)
+    train_dict[param_desc] = train_loss_hist
+    val_dict[param_desc] = val_loss_hist
+    best_val_losses[param_desc] = np.nanmin(val_loss_hist)
+    best_epochs[param_desc] = np.nanargmin(val_loss_hist)
 
 
 best_desc = min(best_val_losses, key=best_val_losses.get)

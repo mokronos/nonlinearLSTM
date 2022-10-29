@@ -16,7 +16,7 @@ def train(train_data, val_data, config, train_config):
     ds_train = create_dataset(train_data, config["inputs"], config["outputs"], train_config["context_length"], train_config["prediction_length"])
     ds_val = create_dataset(val_data, config["inputs"], config["outputs"], train_config["context_length"], train_config["prediction_length"])
 
-    batch_size = train_config["batch_size"]
+    batch_size = train_config["bs"]
     train_dataloader = DataLoader(ds_train, batch_size=batch_size, shuffle=True)
     val_dataloader = DataLoader(ds_val, batch_size=batch_size, shuffle=True)
 
@@ -30,7 +30,7 @@ def train(train_data, val_data, config, train_config):
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using {device} device")
-    model = NeuralNetwork(input_size,hidden_size,output_size).to(device)
+    model = eval(train_config["arch"])(input_size,hidden_size,output_size).to(device)
     print(model)
 
     # loop over epochs
