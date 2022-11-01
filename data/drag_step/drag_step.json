@@ -1,0 +1,86 @@
+{
+      "name": "drag_step",
+      "function": "drag",
+      "samples": 3000,
+      "train_val_test_ratio": [
+            0.6,
+            0.2,
+            0.2
+      ],
+      "time": "t",
+      "outputs": [
+            "velocity"
+      ],
+      "output_labels": [
+            "$v$"
+      ],
+      "output_units": [
+            "m/s"
+      ],
+      "input_units": [
+            "N"
+      ],
+      "input_labels": [
+            "$F_{p}$"
+      ],
+      "init": [
+            [
+                  0
+            ]
+      ],
+      "timestep": 0.01,
+      "constants": {
+            "m": 5.436,
+            "c_d": 0.5,
+            "rho": 1.2,
+            "area": 0.216
+      },
+      "inputs": {
+            "inp_acc": {
+                  "types": {
+                        "steps": {
+                              "when": [
+                                    [
+                                          0,
+                                          0.1,
+                                          0.3,
+                                          0.6
+                                    ],
+                                    [
+                                          0,
+                                          0.1,
+                                          0.3,
+                                          0.6
+                                    ],
+                                    [
+                                          0,
+                                          0.1,
+                                          0.3,
+                                          0.6
+                                    ]
+                              ],
+                              "height": [
+                                    [
+                                          0,
+                                          100,
+                                          200,
+                                          300
+                                    ],
+                                    [
+                                          0,
+                                          100,
+                                          200,
+                                          300
+                                    ],
+                                    [
+                                          0,
+                                          100,
+                                          200,
+                                          300
+                                    ]
+                              ]
+                        }
+                  }
+            }
+      }
+}
