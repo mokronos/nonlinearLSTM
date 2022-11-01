@@ -7,19 +7,21 @@ import itertools
 import numpy as np
 import matplotlib.pyplot as plt
 from train import train
-from helper import check_overwrite, load_dataset, save_model, split_sets
+from helper import check_overwrite, load_data, load_json, save_model
 
 # set random seeds
 torch.manual_seed(3)
 random.seed(10)
 
 # load dataset
-name = "drag_step"
-df, data_config = load_dataset(name)
+name = "drag_mult_step"
+data_config = load_json(name, name)
+train_df = load_data(name, "train")
+val_df = load_data(name, "val")
 
 # define experiment identifiers
 descripor = "wholeseries"
-version = "3"
+version = "1"
 dataset_name = data_config["name"]
 # create full name for folder containing experiment
 name = f"{dataset_name}_{descripor}_{version}"
@@ -28,17 +30,22 @@ name = f"{dataset_name}_{descripor}_{version}"
 experiment_config = {
         "name": name,
         "dataset_name" : dataset_name,
-        "train_val_test_ratio" : [0.6, 0.2, 0.2],
-        "epochs" : 10,
+        "epochs" : 600,
         "context_length": 1,
         "prediction_length": data_config["samples"] - 1,
+        "norm": False,
         }
 
 # define experiment parameters (gets added to experiment_config later)
-lrs = [0.0001]
-# lrs = [0.003, 0.0003, 0.0001]
-bs = [1]
+# learning rate
+# lrs = [0.0001]
+lrs = [0.003, 0.0003, 0.0001]
+# batch_size
+bs = [4]
+# define different architechtures to test
 arch = ["TwoLayers"]
+
+# descriptors for the hyperparameters
 hyper_desc = ["lr", "bs", "arch"]
 
 # get all combinations of params and put into dicts with descripors as keys
@@ -61,24 +68,6 @@ if check_overwrite(experiment_config["name"], path):
 else:
     quit()
 
-# train/val/test ratio
-ratio = experiment_config["train_val_test_ratio"]
-num_series = len(df.groupby(level=0))
-
-# get randomized indices split by ratio
-train_idx, val_idx, test_idx = split_sets(ratio, num_series)
-
-# split df into train/val/test df's with indices
-df_train = df.loc[train_idx]
-df_val = df.loc[val_idx]
-
-# print(df_train)
-# print(df_val)
-
-# save test set indices in config to test model on the correct data later
-experiment_config["train_idx"] = train_idx
-experiment_config["val_idx"] = val_idx
-experiment_config["test_idx"] = test_idx
 
 train_dict = {}
 val_dict = {}
@@ -93,7 +82,7 @@ for params in hyper:
     model_config["name"] = f"{model_config['name']}_{param_desc}"
     model_config.update(params)
 
-    best_state, train_loss_hist, val_loss_hist = train(df_train, df_val, data_config, model_config)
+    best_state, train_loss_hist, val_loss_hist = train(train_df, val_df, data_config, model_config)
 
     # save model
     save_model(savepath, best_state, model_config)
@@ -105,6 +94,15 @@ for params in hyper:
     best_val_losses[param_desc] = np.nanmin(val_loss_hist)
     best_epochs[param_desc] = np.nanargmin(val_loss_hist)
 
+    # save train/val plots for each parameter combination
+    plt.plot(train_loss_hist)
+    plt.plot(val_loss_hist)
+    plt.legend(["train_loss", "val_loss"])
+
+    plt.savefig(f"{savepath}/{model_config['name']}.pdf")
+    plt.savefig(f"{savepath}/{model_config['name']}.png")
+    plt.close()
+    plt.clf()
 
 best_desc = min(best_val_losses, key=best_val_losses.get)
 min_loss = best_val_losses[best_desc]
@@ -122,10 +120,13 @@ with open(f'{savepath}/best_model.json', 'w') as fp:
 plt.plot(np.array(list(val_dict.values())).T)
 plt.legend(list(val_dict.keys()))
 plt.savefig(f"{savepath}/val_loss_comparison.pdf")
+plt.savefig(f"{savepath}/val_loss_comparison.png")
 plt.close()
 plt.clf()
 plt.plot(np.array(list(train_dict.values())).T)
 plt.legend(list(val_dict.keys()))
 plt.savefig(f"{savepath}/train_loss_comparison.pdf")
+plt.savefig(f"{savepath}/train_loss_comparison.png")
 plt.close()
 plt.clf()
+

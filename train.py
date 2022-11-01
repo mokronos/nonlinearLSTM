@@ -12,9 +12,17 @@ def train(train_data, val_data, config, train_config):
     trains one model described by train_config with data
     """
 
+    # define which column of data to train on depending on if normalization is used
+    if train_config["norm"]:
+        input_names = [f"{x}_norm" for x in list(config["inputs"])]
+        output_names = [f"{x}_norm" for x in list(config["outputs"])]
+    else:
+        input_names = list(config["inputs"])
+        output_names = list(config["outputs"])
+
     # create train and validation dataset
-    ds_train = create_dataset(train_data, config["inputs"], config["outputs"], train_config["context_length"], train_config["prediction_length"])
-    ds_val = create_dataset(val_data, config["inputs"], config["outputs"], train_config["context_length"], train_config["prediction_length"])
+    ds_train = create_dataset(train_data, input_names, output_names, train_config["context_length"], train_config["prediction_length"])
+    ds_val = create_dataset(val_data, input_names, output_names, train_config["context_length"], train_config["prediction_length"])
 
     batch_size = train_config["bs"]
     train_dataloader = DataLoader(ds_train, batch_size=batch_size, shuffle=True)
@@ -44,6 +52,7 @@ def train(train_data, val_data, config, train_config):
     # don't know first validation loss, as there is one optimization step before checking validation loss
     val_loss_hist = [np.nan]
     best_state = deepcopy(model.state_dict())
+    best_loss, _ = test_loop(val_dataloader, model, loss_fn, device)
 
     for epoch in range(epochs):
 
@@ -54,13 +63,13 @@ def train(train_data, val_data, config, train_config):
         # test model on validation set
         loss, model_state = test_loop(val_dataloader, model, loss_fn, device)
 
-        if loss < val_loss_hist[-1]:
+        # save best model by comparing current loss to best loss
+        if loss < best_loss:
+            best_loss = loss
             best_state = model_state
+
         # store loss and parameters of current model to later retrieve best model
         val_loss_hist.append(loss)
-        # state_dicts.append(state)
-
-
 
     return best_state, train_loss_hist, val_loss_hist
 

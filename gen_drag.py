@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from helper import load_dataset, save_dataset, gen_data
+from build_dataset import build_dataset
 
 
 data_path = "data/"
@@ -43,12 +44,13 @@ def drag(y,t,u,m,c_d,rho,area):
     return dv
 
 x = [[0]]*100
-y = [[x] for x in range(100)]
+y = [[0, x*1.5**1, x*1.5**2,x*1.5**3] for x in range(10,210,10)]
 
 config = {
-        "name":"drag_step",
+        "name":"drag_mult_step",
         "function": "drag",
         "samples": 3000,
+        "train_val_test_ratio" : [0.6, 0.2, 0.2],
         "time": "t",
         "outputs": ["velocity"],
         "output_labels":[r"$v$"],
@@ -68,9 +70,9 @@ config = {
                     "types": {
                         "steps": {
                             "when":
-                            [[0,0.1,0.3,0.6]]*3,
+                            [[0,0.1,0.3,0.6]]*20,
                             "height":
-                            [[0,100,200,300]]*3
+                            y
                             },
                         }},
         }
@@ -81,6 +83,7 @@ config = {
 data = gen_data(config, eval(config["function"]))
 save_dataset(data, config)
 
+build_dataset(config["name"])
 df, config = load_dataset(config["name"])
 
 df.loc[0].plot()

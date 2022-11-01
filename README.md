@@ -135,10 +135,10 @@ Presentation:
 iguana
 sklearn --> normalization, scaler (fit --> transform), ausgang und eingang normieren, je nach activierungsfunktion
 3 kraftsprünge (100,200,300)
-direkt
 
 andere "beispiele" für loss und prediction bis Montag
 
+input norm maybe: https://datascience.stackexchange.com/questions/24214/why-should-i-normalize-also-the-output-data
 
 ~ Deadline: mitte nov
 20.6. anmeldung

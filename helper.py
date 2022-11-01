@@ -47,9 +47,6 @@ def create_dataset(df, input_names, output_names, init = 1, length = 2):
     # x1 = [4,9,0]
     # y1 = [9,16,25]
 
-    input_names = list(input_names)
-    output_names = list(output_names)
-
     # get some info about features
     num_inputs = len(input_names)
     num_outputs = len(output_names)
@@ -135,6 +132,21 @@ def load_dataset(name, path = "data/"):
     with open(f'{savepath}/{name}.json', 'r') as stream:
         config = json.load(stream)
     return df, config
+
+def load_data(name, suff, path = "data/"):
+    savepath = f"{path}{name}"
+    df = pd.read_csv(f"{savepath}/{name}_{suff}.csv", index_col=[0, 1])
+    return df
+
+def save_data(df, name, suff, path = "data/"):
+    savepath = f"{path}{name}"
+    df.to_csv(f"{savepath}/{name}_{suff}.csv")
+
+def load_json(name, suff, path = "data/"):
+    savepath = f"{path}{name}"
+    with open(f'{savepath}/{suff}.json', 'r') as stream:
+        config = json.load(stream)
+    return config
 
 def prepare_folder(name, path = "models/"):
     if check_overwrite(name, path):
@@ -238,5 +250,25 @@ def gen_data(data_config, func):
             result = pd.concat([result,df])
 
             counter += 1
+
+    return result
+
+def create_multiindex(pred, gt, data_config):
+
+    result = pd.DataFrame()
+
+    sequences = pred.shape[0]
+    samples = pred.shape[1]
+
+    for seq in range(sequences):
+        # create new multiindex for dataframe
+        index = [(seq, i) for i in range(samples)]
+        index = pd.MultiIndex.from_tuples(index, names=["series", "index"])
+
+        pred_name = [f"{x}_pred" for x in data_config["outputs"]]
+        gt_name = [f"{x}_gt" for x in data_config["outputs"]]
+
+        df = pd.DataFrame(np.hstack((pred[seq],gt[seq])), index= index, columns=pred_name + gt_name)
+        result = pd.concat([result,df])
 
     return result
