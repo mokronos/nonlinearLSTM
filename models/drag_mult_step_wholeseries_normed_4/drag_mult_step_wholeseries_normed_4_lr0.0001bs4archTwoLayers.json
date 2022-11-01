@@ -1,0 +1,11 @@
+{
+      "name": "drag_mult_step_wholeseries_normed_4_lr0.0001bs4archTwoLayers",
+      "dataset_name": "drag_mult_step",
+      "epochs": 600,
+      "context_length": 1,
+      "prediction_length": 2999,
+      "norm": true,
+      "lr": 0.0001,
+      "bs": 4,
+      "arch": "TwoLayers"
+}
