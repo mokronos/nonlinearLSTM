@@ -45,4 +45,5 @@ def vis_results(results, data_config, savepath, suffix):
         ax[1].legend()
         plt.savefig(f"{savepath}/{suffix}{c}.pdf")
         plt.savefig(f"{savepath}/{suffix}{c}.png")
+        plt.clf()
         c+=1

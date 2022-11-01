@@ -8,11 +8,11 @@ from vis_helper import vis_results
 # dataset name
 dataset_name = "drag_mult_step"
 # experiment name
-descriptor = "wholeseries"
+descriptor = "wholeseries_normed"
 version = "1"
 # create full name for folder containing experiment
 experiment_name = f"{dataset_name}_{descriptor}_{version}"
-suffix = "train"
+suffixes = ["train", "val", "test"] 
 
 # where to save figures to
 savedir = "figures/"
@@ -26,9 +26,11 @@ data_config = load_json(dataset_name, dataset_name)
 df_train = load_data(dataset_name, "train")
 df_val = load_data(dataset_name, "val")
 df_test = load_data(dataset_name, "test")
-results = load_data(experiment_name, f"prediction_{suffix}", path="results/")
 
-# vis anything
+for suffix in suffixes:
+    results = load_data(experiment_name, f"prediction_{suffix}", path="results/")
 
-results = results.loc[:4]
-vis_results(results, data_config, savepath, suffix)
+    # vis anything
+
+    results = results.loc[:4]
+    vis_results(results, data_config, savepath, suffix)
