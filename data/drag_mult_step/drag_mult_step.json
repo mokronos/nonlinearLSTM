@@ -35,7 +35,7 @@
             "rho": 1.2,
             "area": 0.216
       },
-      "inputs": {
+      "input_config": {
             "inp_acc": {
                   "types": {
                         "steps": {
@@ -286,5 +286,8 @@
                         }
                   }
             }
-      }
+      },
+      "inputs": [
+            "inp_acc"
+      ]
 }

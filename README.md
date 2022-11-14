@@ -140,5 +140,38 @@ andere "beispiele" für loss und prediction bis Montag
 
 input norm maybe: https://datascience.stackexchange.com/questions/24214/why-should-i-normalize-also-the-output-data
 
+What hyperparameter to test:
+- depth of network (vanishing gradient!!!)
+- width of network
+- more variance in data!
+- activation function, need to rewrite model code, pytorch LSTM only supports tanh default
+
+ToDo:
+- Pytorch initialization, random
+- check that seeding is working, check inital weights, done
+- just always normalize input and output (better if scales change)
+- manually Hyperparameters checking, one by one
+    - create better train/data functions with better logging
+    - constant
+        - dataset, split
+        - activation function (need to rewrite model code, pytorch LSTM only supports tanh default)
+        - always normalize (need to rewrite training/loss to be able to compare loss/accuracy while training, to compare to non-normalized results; for autotuner)
+    - hyperparameters
+        - number of units in lstm/fc layer
+        - learning rate
+        - weight init
+        - dropout probability
+        - learning rate decay
+        - momentum
+- mby compare to auto tuner of hyperparameters
+- can't use batch norm in rnn/lstm, batch norm gets calculated once (need to modify for following loops as the statistics change in time)
+
+einleitung
+grundlagen
+datenset erstellen
+training
+hyperparameter testen
+evaluierung
+
 ~ Deadline: mitte nov
 20.6. anmeldung

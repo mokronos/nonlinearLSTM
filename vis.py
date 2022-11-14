@@ -2,7 +2,7 @@ import os
 import matplotlib.pyplot as plt
 import pandas as pd
 from helper import load_data, load_json
-from vis_helper import vis_results
+from vis_helper import vis_data, vis_results
 
 # define all names
 # dataset name
@@ -27,10 +27,7 @@ df_train = load_data(dataset_name, "train")
 df_val = load_data(dataset_name, "val")
 df_test = load_data(dataset_name, "test")
 
-for suffix in suffixes:
-    results = load_data(experiment_name, f"prediction_{suffix}", path="results/")
 
-    # vis anything
-
-    results = results.loc[:4]
-    vis_results(results, data_config, savepath, suffix)
+print(df_train)
+# vis_data(df_train, data_config, savepath, "data")
+vis_results(df_train, data_config, savepath, "data") 

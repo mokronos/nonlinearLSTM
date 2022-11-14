@@ -2,7 +2,7 @@ import json
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
-from helper import create_dataset, create_multiindex, load_data, load_json, prepare_folder, save_data
+from helper import create_dataset, create_multiindex, load_data, load_json, norm_name, prepare_folder, save_data
 from models import *
 from train import test_loop
 
@@ -18,7 +18,7 @@ df_val = load_data(name, "val")
 df_test = load_data(name, "test")
 
 # define experiment identifiers
-descriptor = "wholeseries"
+descriptor = "test"
 version = "1"
 name = data_config["name"]
 # create full name for folder containing experiment
@@ -46,11 +46,11 @@ batch_size = model_config["bs"]
 
 # define which column of data to train on depending on if normalization is used
 if model_config["norm"]:
-    input_names = [f"{x}_norm" for x in list(data_config["inputs"])]
-    output_names = [f"{x}_norm" for x in list(data_config["outputs"])]
+    input_names = [norm_name(x) for x in data_config["inputs"]]
+    output_names = [norm_name(x) for x in data_config["outputs"]]
 else:
-    input_names = list(data_config["inputs"])
-    output_names = list(data_config["outputs"])
+    input_names = data_config["inputs"]
+    output_names = data_config["outputs"]
 
 
 #################################################
@@ -100,7 +100,7 @@ for desc, data in data.items():
     ground_truth = ground_truth.reshape((-1,)+predictions.shape[-2:])
 
 
-    results = create_multiindex(predictions, ground_truth, data_config)
+    results = create_multiindex(predictions, ground_truth, data_config, model_config)
 
     save_data(results, experiment_name, f"prediction_{desc}", path=result_dir)
 

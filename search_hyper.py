@@ -14,32 +14,33 @@ torch.manual_seed(3)
 random.seed(10)
 
 # load dataset
-name = "drag_mult_step"
-data_config = load_json(name, name)
-train_df = load_data(name, "train")
-val_df = load_data(name, "val")
+dataset_name = "drag_mult_step"
 
 # define experiment identifiers
-descripor = "wholeseries"
+descripor = "test"
 version = "1"
-dataset_name = data_config["name"]
 # create full name for folder containing experiment
 name = f"{dataset_name}_{descripor}_{version}"
+
+# load dataset_config to get length of series to define length of prediction
+data_config = load_json(dataset_name, dataset_name)
 
 # define dict with config info to store in json
 experiment_config = {
         "name": name,
         "dataset_name" : dataset_name,
-        "epochs" : 600,
+        "epochs" : 2,
         "context_length": 1,
         "prediction_length": data_config["samples"] - 1,
-        "norm": False,
+        "norm": True,
+        "h1": 64,
+        "h2": 64,
         }
 
 # define experiment parameters (gets added to experiment_config later)
 # learning rate
-# lrs = [0.0001]
-lrs = [0.003, 0.0003, 0.0001]
+lrs = [ 0.003, 0.0001]
+# lrs = [0.003, 0.0003, 0.0001]
 # batch_size
 bs = [4]
 # define different architechtures to test
@@ -82,7 +83,7 @@ for params in hyper:
     model_config["name"] = f"{model_config['name']}_{param_desc}"
     model_config.update(params)
 
-    best_state, train_loss_hist, val_loss_hist = train(train_df, val_df, data_config, model_config)
+    best_state, train_loss_hist, val_loss_hist = train(model_config)
 
     # save model
     save_model(savepath, best_state, model_config)
@@ -97,6 +98,7 @@ for params in hyper:
     # save train/val plots for each parameter combination
     plt.plot(train_loss_hist)
     plt.plot(val_loss_hist)
+    plt.yscale("log")
     plt.legend(["train_loss", "val_loss"])
 
     plt.savefig(f"{savepath}/{model_config['name']}.pdf")
@@ -118,12 +120,14 @@ print(best_model)
 with open(f'{savepath}/best_model.json', 'w') as fp:
     json.dump(best_model, fp, indent=6)
 plt.plot(np.array(list(val_dict.values())).T)
+plt.yscale("log")
 plt.legend(list(val_dict.keys()))
 plt.savefig(f"{savepath}/val_loss_comparison.pdf")
 plt.savefig(f"{savepath}/val_loss_comparison.png")
 plt.close()
 plt.clf()
 plt.plot(np.array(list(train_dict.values())).T)
+plt.yscale("log")
 plt.legend(list(val_dict.keys()))
 plt.savefig(f"{savepath}/train_loss_comparison.pdf")
 plt.savefig(f"{savepath}/train_loss_comparison.png")

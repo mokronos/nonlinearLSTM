@@ -6,6 +6,7 @@ class Gen:
     """
     Generator for input and output data from a given differential equation
     Outputs 2D array with states and inputs at every time step (state1, state2, input1, input2)
+    Doesn't support zero inputs yet (setting one to 0 for now)
     """
 
     def __init__(self, func, inputs, parameters, y0, dt, samples):

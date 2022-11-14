@@ -65,7 +65,7 @@ config = {
                 "rho": 1.2,
                 "area": 0.216,
                 },
-        "inputs": {
+        "input_config": {
                 "inp_acc":{
                     "types": {
                         "steps": {
@@ -77,8 +77,7 @@ config = {
                         }},
         }
         }
-
-
+config["inputs"] = list(config["input_config"].keys())
 
 data = gen_data(config, eval(config["function"]))
 save_dataset(data, config)

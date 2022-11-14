@@ -1,25 +1,9 @@
 import matplotlib.pyplot as plt
+from helper import pred_name, gt_name, error_name, norm_name
 
-def norm_name(name):
-
-    name_normed = f"{name}_norm"
-    return name_normed
-
-def pred_name(name):
-    name_normed = f"{name}_pred"
-    return name_normed
-
-def gt_name(name):
-    name_normed = f"{name}_gt"
-    return name_normed
-
-def error_name(name):
-    name_normed = f"{name}_error"
-    return name_normed
 
 def vis_results(results, data_config, savepath, suffix):
     indices = results.index.unique(level="series")
-    c = 0
     for i in indices:
 
 
@@ -43,7 +27,43 @@ def vis_results(results, data_config, savepath, suffix):
         ax[1].set_ylabel(r"$m^2/s^2$")
         ax[1].set_xlabel("time in 0.01s steps")
         ax[1].legend()
-        plt.savefig(f"{savepath}/{suffix}{c}.pdf")
-        plt.savefig(f"{savepath}/{suffix}{c}.png")
+        plt.savefig(f"{savepath}/{suffix}{i}.pdf")
+        plt.savefig(f"{savepath}/{suffix}{i}.png")
+        plt.close
         plt.clf()
-        c+=1
+
+def vis_data(df, data_config, savepath, suffix):
+    indices = df.index.unique(level="series")
+    for i in indices:
+
+        data = df.xs(i)
+
+        info = [f"{key}: {value}" for key, value in data_config["constants"].items()]
+        info = "; ".join(info)
+
+        fig, ax1 = plt.subplots()
+        fig.suptitle(info)
+
+        ax2 = ax1.twinx()
+
+        color1 = "g"
+        color2 = "r"
+
+        data[data_config["outputs"]].plot(ax=ax1, color = color1)
+        data[data_config["inputs"]].plot(ax=ax2, color = color2)
+
+        ax1.set_zorder(ax2.get_zorder()+1)
+        ax1.patch.set_visible(False)
+
+        ax1.legend(data_config["output_labels"], loc="upper left")
+        ax2.legend(data_config["input_labels"], loc="lower right")
+
+        ax1.set_xlabel(r"time in $0.01 s$")
+        ax1.set_ylabel(fr'{data_config["output_labels"][0]} in {data_config["output_units"][0]}', color = color1)
+        ax2.set_ylabel(fr'{data_config["input_labels"][0]} in {data_config["input_units"][0]}', color = color2)
+
+        plt.savefig(f"{savepath}/{suffix}{i}.pdf")
+        plt.savefig(f"{savepath}/{suffix}{i}.png")
+        plt.close
+        plt.clf()
+

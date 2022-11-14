@@ -26,7 +26,7 @@ config = {
         "constants": {
                 "g": 9.81
                 },
-        "inputs": {
+        "input_config": {
                 "force1":{
                     "types": {
                         "steps": {
@@ -35,6 +35,7 @@ config = {
                         }}}}
         } 
 
+config["inputs"] = list(config["input_config"].keys())
 
 
 data = gen_data(config, eval(config["function"]))

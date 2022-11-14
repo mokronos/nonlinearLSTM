@@ -1,41 +1,7 @@
-from helper import load_dataset, split_sets
+from helper import load_data, load_dataset, split_sets, gt_name, pred_name
+from sklearn.preprocessing import MinMaxScaler
+import joblib
 
-# normalize train set, use same normalization on val and test, only input vector
-def min_max_scale(df, col, min, max):
-
-    # special case, produces nan otherwise (divide by 0)
-    if min == max:
-        df[f"{col}_norm"] = df[col]*0
-
-    min_max_scaler = lambda x: (x-min)/(max-min)
-
-    df[f"{col}_norm"] = df[col].apply(min_max_scaler)
-
-    return df
-
-def inverse_min_max_scale(df, col, min, max):
-
-    # x: (x-min)/(max-min)
-    # x: x * (max-min) + min
-    # x: x*max - x*min + min
-
-    # special case, produces nan otherwise (divide by 0)
-    min_max_scaler = lambda x: x*max - x*min + min
-
-    df[f"{col}_invnorm"] = df[col].apply(min_max_scaler)
-
-    return df
-
-
-def scale(df, stats):
-
-    for label in df.columns:
-
-        min = stats[label]["min"]
-        max = stats[label]["max"]
-
-        df = min_max_scale(df, label, min, max)
-    return df
 
 def build_dataset(name, path = "data/"):
 
@@ -55,23 +21,54 @@ def build_dataset(name, path = "data/"):
     train_df = df.loc[train_idx]
     val_df = df.loc[val_idx]
     test_df = df.loc[test_idx]
-    train_stats = train_df.describe()
 
+    # fit scaler for input and output on train set to later retrieve only output scaler to inverse transform
+    input_scaler = MinMaxScaler()
+    output_scaler = MinMaxScaler()
+    input_scaler.fit(train_df[data_config["inputs"]])
+    output_scaler.fit(train_df[data_config["outputs"]])
+    joblib.dump(input_scaler, f"data/{data_config['name']}/{data_config['name']}_input_scaler.pkl")
+    joblib.dump(output_scaler, f"data/{data_config['name']}/{data_config['name']}_output_scaler.pkl")
+
+    # scale train, val, test set
     # save normalized values in addition to normal values
-    # and save normalization values to reverse later
-    train_df_scaled = scale(train_df, train_stats)
-    val_df_scaled = scale(val_df, train_stats)
-    test_df_scaled = scale(test_df, train_stats)
+    train_df_scaled = scale(train_df, data_config, input_scaler, output_scaler)
+    val_df_scaled = scale(val_df, data_config, input_scaler, output_scaler)
+    test_df_scaled = scale(test_df, data_config, input_scaler, output_scaler)
 
     # save all 3
     train_df_scaled.to_csv(f"{savepath}/{name}_train.csv")
     val_df_scaled.to_csv(f"{savepath}/{name}_val.csv")
     test_df_scaled.to_csv(f"{savepath}/{name}_test.csv")
 
-    # save train_stats dataframe to later invert the normalization easily (and get some stats)
-    train_stats.to_csv(f"{savepath}/{name}_train_stats.csv")
+def scale(df, data_config, input_scaler, output_scaler):
+    df[[f"{x}_norm" for x in input_scaler.get_feature_names_out()]] = input_scaler.transform(df[data_config["inputs"]])
+    df[[f"{x}_norm" for x in output_scaler.get_feature_names_out()]] = output_scaler.transform(df[data_config["outputs"]])
+    return df
+
+def inv_scale_results(results, data_config):
+
+    result_scaler = joblib.load(f"data/{data_config['name']}/{data_config['name']}_outputs_scaler.pkl")
+
+    results[[f"{pred_name(x)}_invnorm" for x in result_scaler.get_feature_names_out()]] = result_scaler.inverse_transform(results[[pred_name(x) for x in result_scaler.get_feature_names_out()]])
+    results[[f"{gt_name(x)}_invnorm" for x in result_scaler.get_feature_names_out()]] = result_scaler.inverse_transform(results[[gt_name(x) for x in result_scaler.get_feature_names_out()]])
+
+    return results
 
 if __name__ == "__main__":
 
-    name = "drag_step"
-    build_dataset(name)
+    name = "drag_mult_step"
+    df, data_config = load_dataset(name)
+    df = df.loc[:1]
+    # build_dataset(name)
+    scaled_df = scale(df, data_config)
+    # experiment name
+    descriptor = "wholeseries_normed"
+    version = "1"
+    # create full name for folder containing experiment
+    experiment_name = f"{data_config['name']}_{descriptor}_{version}"
+    suffixes = ["train", "val", "test"] 
+    suffix = suffixes[0]
+    results = load_data(experiment_name, f"prediction_{suffix}", path="results/")
+    results = inv_scale_results(results, data_config)
+    

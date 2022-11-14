@@ -22,14 +22,23 @@ class BasicDataset(Dataset):
 
     def __len__(self):
 
-        return len(self.features)
-    
+       return len(self.features)
+
     def __getitem__(self, index):
 
+       return self.features[index], self.targets[index]
 
+def norm_name(name):
+    return f"{name}_norm"
 
-        return self.features[index], self.targets[index]
+def pred_name(name):
+    return f"{name}_pred"
 
+def gt_name(name):
+    return f"{name}_gt"
+
+def error_name(name):
+    return f"{name}_error"
 
 def create_dataset(df, input_names, output_names, init = 1, length = 2):
 
@@ -76,7 +85,7 @@ def create_dataset(df, input_names, output_names, init = 1, length = 2):
             # append to resulting lists
             trans_features.append(temp_features)
             trans_targets.append(temp_targets)
-    
+
     # convert to numpy array (faster for torch)
     trans_features = np.array(trans_features)
     trans_targets = np.array(trans_targets)
@@ -187,7 +196,7 @@ def gen_input(data_config):
     mem = {}
 
     samples = data_config["samples"]
-    for inp, val in data_config["inputs"].items():
+    for inp, val in data_config["input_config"].items():
         mem[inp] = []
         for type, desc in val["types"].items():
 
@@ -209,7 +218,7 @@ def gen_input(data_config):
     for idx, sample in enumerate(comb):
         index = [(idx, i) for i in range(samples)]
         index = pd.MultiIndex.from_tuples(index, names=["series", "index"])
-        out_df = pd.DataFrame(np.array(sample).T, index= index, columns=data_config["inputs"].keys())
+        out_df = pd.DataFrame(np.array(sample).T, index= index, columns=data_config["inputs"])
         df = pd.concat([df,out_df])
 
     return df
@@ -233,7 +242,7 @@ def gen_data(data_config, func):
         for init in data_config["init"]:
 
             # transform "inputs" array to fit in ode generator
-            inputs = data[data_config["inputs"].keys()].T.values.tolist()
+            inputs = data[data_config["inputs"]].T.values.tolist()
             inputs = np.array(inputs).T
 
             # calculate ode results for one current series
@@ -246,14 +255,14 @@ def gen_data(data_config, func):
             index = pd.MultiIndex.from_tuples(index, names=["series", "index"])
 
             # fill dataframe with new data and concat it with resulting dataframe to stack them above each other
-            df = pd.DataFrame(np.array(x.X), index= index, columns=data_config["outputs"] + list(data_config["inputs"].keys()))
+            df = pd.DataFrame(np.array(x.X), index= index, columns=data_config["outputs"] + data_config["inputs"])
             result = pd.concat([result,df])
 
             counter += 1
 
     return result
 
-def create_multiindex(pred, gt, data_config):
+def create_multiindex(pred, gt, data_config, model_config):
 
     result = pd.DataFrame()
 
@@ -265,10 +274,14 @@ def create_multiindex(pred, gt, data_config):
         index = [(seq, i) for i in range(samples)]
         index = pd.MultiIndex.from_tuples(index, names=["series", "index"])
 
-        pred_name = [f"{x}_pred" for x in data_config["outputs"]]
-        gt_name = [f"{x}_gt" for x in data_config["outputs"]]
+        if model_config["norm"]:
+            pred_names = [norm_name(pred_name(x)) for x in data_config["outputs"]]
+            gt_names = [norm_name(gt_name(x)) for x in data_config["outputs"]]
+        else:
+            pred_names = [pred_name(x) for x in data_config["outputs"]]
+            gt_names = [gt_name(x) for x in data_config["outputs"]]
 
-        df = pd.DataFrame(np.hstack((pred[seq],gt[seq])), index= index, columns=pred_name + gt_name)
+        df = pd.DataFrame(np.hstack((pred[seq],gt[seq])), index= index, columns=pred_names + gt_names)
         result = pd.concat([result,df])
 
     return result
