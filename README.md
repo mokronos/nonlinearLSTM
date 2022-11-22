@@ -27,6 +27,15 @@ Trying to train LSTMs for non-linear models.
 - https://cpb-us-e1.wpmucdn.com/campuspress-test.yale.edu/dist/7/677/files/2016/09/paper_LSTM_2017ACC-1sz2yir.pdf
 - https://sci-hub.se/10.1007/s40435-020-00673-4 , A LSTM based prediction model for nonlinear dynamical systems with chaotic itinerancy
     
+# important papers
+- https://arxiv.org/pdf/1503.04069.pdf?fbclid=IwAR377Jhphz_xGSSThcqGUlAx8OJc_gU6Zwq8dABHOdS4WNOPRXA5LcHOjUg
+    - shows that learning rate and network size are most influential hyperparameters
+- http://www.bioinf.jku.at/publications/older/2604.pdf
+    - original lstm paper
+
+- https://sci-hub.se/10.1109/msp.2008.930649
+    - mse source
+
 
 - a lot of literature for language models (predicting letter after letter) --> classification
 - but most things can be applied for lstm regression as well
@@ -147,10 +156,12 @@ What hyperparameter to test:
 - activation function, need to rewrite model code, pytorch LSTM only supports tanh default
 
 ToDo:
-- Pytorch initialization, random
+- Pytorch initialization, random, done
+    - stdv = 1. / math.sqrt(self.weight.size(1))
+      self.weight.data.uniform_(-stdv, stdv)
 - check that seeding is working, check inital weights, done
-- just always normalize input and output (better if scales change)
-- manually Hyperparameters checking, one by one
+- just always normalize input and output (better if scales change), done
+- manually Hyperparameters checking, one by one, done
     - create better train/data functions with better logging
     - constant
         - dataset, split
@@ -163,15 +174,29 @@ ToDo:
         - dropout probability
         - learning rate decay
         - momentum
-- mby compare to auto tuner of hyperparameters
+- mby compare to auto tuner of hyperparameters, training takes long (gpu not working for some reason) need to load model and compare loss
 - can't use batch norm in rnn/lstm, batch norm gets calculated once (need to modify for following loops as the statistics change in time)
 
-einleitung
-grundlagen
-datenset erstellen
-training
-hyperparameter testen
-evaluierung
+questions:
+- what variation to bring into data?
+    - start easy, work way up to more complex stuff
+    - change what makes for interesting data
+- what methods to explain in what detail
+    - change whats needed, keep short
+- what hyperparameters
+    - first depth
+    - then width over all layers
+    - then learning rate
+    - then squeeze out
+- roter faden?
+    - zeigen dass lstm nonlinear sequences predicten kann
+    - über längere zeit mit verschiedenen daten
+- can i write in English? yes
+- pages? ~20 (probably more, lots of figures)
 
-~ Deadline: mitte nov
+1. make one simple and one complex dataset for both function
+2. train on both datasets, go through hyperparameters
+3. compare results
+
+~ Deadline: 1.dez
 20.6. anmeldung

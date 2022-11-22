@@ -1,17 +1,16 @@
 import os
+import glob
 import random
-import inspect
 import shutil
-import yaml
 import json
-from copy import deepcopy
+import joblib
 import torch
 from torch.utils.data import Dataset, DataLoader, ConcatDataset
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import itertools
 from data import Gen
+from matplotlib import pyplot as plt
 
 class BasicDataset(Dataset):
 
@@ -147,6 +146,11 @@ def load_data(name, suff, path = "data/"):
     df = pd.read_csv(f"{savepath}/{name}_{suff}.csv", index_col=[0, 1])
     return df
 
+def load_result(name, variation, suff, path = "results/"):
+    savepath = f"{path}{name}"
+    df = pd.read_csv(f"{savepath}/{name}_{variation}_prediction_{suff}.csv", index_col=[0, 1])
+    return df
+
 def save_data(df, name, suff, path = "data/"):
     savepath = f"{path}{name}"
     df.to_csv(f"{savepath}/{name}_{suff}.csv")
@@ -169,9 +173,9 @@ def prepare_folder(name, path = "models/"):
 
 def save_model(savepath, model_state, model_config):
     model_name = model_config["name"]
-    torch.save(model_state, f"{savepath}/{model_name}.pt")
+    torch.save(model_state, f"{savepath}/{model_name}_model.pt")
 
-    with open(f'{savepath}/{model_name}.json', 'w') as fp:
+    with open(f'{savepath}/{model_name}_config.json', 'w') as fp:
         json.dump(model_config, fp, indent=6)
 
 def gen_step(when, height, length):
@@ -190,6 +194,58 @@ def gen_step(when, height, length):
 
     return out
 
+def gen_spike(when, height, length):
+    """
+    create spike impulse at certain (percent of total length [length]) points [when]
+    and height [height]
+    """
+
+    out = []
+    for w, h  in zip(when, height):
+        data = np.zeros(length)
+        for i in range(len(w)):
+            pos = int(w[i]*length)
+            data[pos] = h[i]
+        out.append(list(data))
+
+    return out
+
+def gen_slope(start, end, length):
+    slope = (end - start)/(length-1)
+
+    res = []
+    for i in range(length):
+        res.append(start + slope * i)
+    
+    return res
+
+def gen_saw(when, height, length):
+    """
+    create step impulse at certain (percent of total length [length]) points [when]
+    and height [height]
+    """
+
+    out = []
+    for w, h  in zip(when, height):
+        data = np.zeros(length)
+        for i in range(len(w)):
+            start = int(h[i][0])
+            end = int(h[i][1])
+            w0 = w[i][0]
+            w1 = w[i][1]
+            pos1 = int(w0*length)
+            pos2 = int(w1*length)
+            
+            period = pos2 - pos1
+            
+            tmp = gen_slope(start, end, period)
+
+            data[pos1:pos2] = tmp
+            data[pos2:] = end
+        out.append(list(data))
+
+    return out
+
 # inputs: jump points, 
 def gen_input(data_config):
 
@@ -199,6 +255,7 @@ def gen_input(data_config):
     for inp, val in data_config["input_config"].items():
         mem[inp] = []
         for type, desc in val["types"].items():
+            print(f"generating {type} with {desc}")
 
             # step function
             if type == "steps":
@@ -208,9 +265,25 @@ def gen_input(data_config):
                 else:
                     mem[inp].append(data)
 
+            # saw function
+            if type == "saw":
+                data = gen_saw(desc["when"], desc["height"], samples)
+                if len(np.shape(data)) == 2:
+                    mem[inp] += data
+                else:
+                    mem[inp].append(data)
+
+            # spikes function
+            if type == "spikes":
+                data = gen_spike(desc["when"], desc["height"], samples)
+                if len(np.shape(data)) == 2:
+                    mem[inp] += data
+                else:
+                    mem[inp].append(data)
+
             # custom functions just takes lists given in custom
             if type == "custom":
-                mem[inp] += desc
+                mem[inp].append(desc)
 
     # get all combinations of input variations
     comb = list(itertools.product(*mem.values()))
@@ -241,6 +314,7 @@ def gen_data(data_config, func):
         # loop over different initial conditions given
         for init in data_config["init"]:
 
+            print(f"generating {counter}th series from input")
             # transform "inputs" array to fit in ode generator
             inputs = data[data_config["inputs"]].T.values.tolist()
             inputs = np.array(inputs).T
@@ -284,4 +358,181 @@ def create_multiindex(pred, gt, data_config, model_config):
         df = pd.DataFrame(np.hstack((pred[seq],gt[seq])), index= index, columns=pred_names + gt_names)
         result = pd.concat([result,df])
 
+    if model_config["norm"]:
+        result = inv_scale_results(result, data_config)
     return result
+
+def scale(df, data_config, input_scaler, output_scaler):
+    df[[f"{x}_norm" for x in input_scaler.get_feature_names_out()]] = input_scaler.transform(df[data_config["inputs"]])
+    df[[f"{x}_norm" for x in output_scaler.get_feature_names_out()]] = output_scaler.transform(df[data_config["outputs"]])
+    return df
+
+def inv_scale_results(results, data_config):
+
+    result_scaler = joblib.load(f"data/{data_config['name']}/{data_config['name']}_output_scaler.pkl")
+    results[[f"{pred_name(x)}" for x in result_scaler.get_feature_names_out()]] = result_scaler.inverse_transform(results[[norm_name(pred_name(x)) for x in result_scaler.get_feature_names_out()]])
+    results[[f"{gt_name(x)}" for x in result_scaler.get_feature_names_out()]] = result_scaler.inverse_transform(results[[norm_name(gt_name(x)) for x in result_scaler.get_feature_names_out()]])
+
+    return results
+
+def sort_paths(paths):
+    """
+    sort paths by hyperparameter descriptions in filename
+    all need to be numbers, but arch description can be string, made exception below
+    this is really ugly, but works for now
+    """
+    configs = {}
+    for path in paths:
+        with open(path, "r") as f:
+            configs[path] = json.load(f)
+
+    # replacing arch description with number to sort it
+    sizes = {"OneLayers":1, "TwoLayers":2, "ThreeLayers":3, "FourLayers":4, "FiveLayers":5}
+    for config in configs.values():
+        config["arch"] = sizes[config["arch"]]
+    
+    # create df with all hyper values and path
+    temp = pd.DataFrame()
+    for key, value in configs.items():
+        hyper_desc = value["hyper_desc"]
+        cols = ["path"]
+        cols += hyper_desc
+        values = [[key]]
+        values[0] += [value[x] for x in hyper_desc]
+        df = pd.DataFrame(values, columns=cols)
+        temp = pd.concat([temp,df])
+
+    hyper_desc = configs[list(configs.keys())[0]]["hyper_desc"]
+    temp.sort_values(hyper_desc, inplace=True)
+    sorted_paths = list(temp["path"].values)
+    return sorted_paths
+
+def create_summary(experiment_name, models_path="models/"):
+
+    """
+    create summary of all models in experiment
+    plot them, and save table with results
+    """
+
+    # make dpi of matplotlib 300
+    plt.rcParams['figure.dpi'] = 300
+    plt.rcParams['savefig.dpi'] = 300
+
+    # get paths of all model_configs
+    paths = glob.glob(f"{models_path}{experiment_name}/*_config.json")
+
+    paths = sort_paths(paths)
+
+    # create summary dataframe
+    summary = pd.DataFrame()
+    legend_params = []
+    for path in paths:
+        # read all information for model
+        # load model config
+        with open(path, 'r') as stream:
+            model_config = json.load(stream)
+        with open(f"{models_path}{experiment_name}/{model_config['name']}_best.json", 'r') as stream:
+            best_info = json.load(stream)
+        
+        # add info as row to summary dataframe
+        columns = ["name"] + model_config["hyper_desc"]
+        values = [[model_config[x] for x in columns]]
+        values[0].append(best_info["best_val_loss"])
+        values[0].append(best_info["best_epoch"])
+        columns += ["val_loss", "best_epoch"]
+        df  = pd.DataFrame(values, columns=columns)
+        summary = pd.concat([summary,df])
+        summary.reset_index(drop=True, inplace=True)
+        
+        # load loss csv file
+        loss_hist = pd.read_csv(f"{models_path}{experiment_name}/{model_config['name']}_loss.csv", index_col=0)
+
+        # save list with descriptions of models to later use as legend
+        param_desc = "; ".join([f"{desc}: {model_config[desc]}" for desc in model_config["hyper_desc"]])
+        legend_params.append(param_desc)
+
+        plt.figure(1)
+        loss_hist["train_loss"].plot(linewidth=0.5)
+
+        plt.figure(2)
+        loss_hist["val_loss"].plot(linewidth=0.5)
+
+        plt.figure(3)
+        loss_hist.plot(linewidth=0.5)
+        ylabel = "Loss"
+        xlabel = "Epoch"
+        plt.yscale("log")
+        plt.ylabel(ylabel)
+        plt.xlabel(xlabel)
+        plt.tight_layout()
+        plt.savefig(f"{models_path}{experiment_name}/{model_config['name']}_loss.pdf")
+        plt.savefig(f"{models_path}{experiment_name}/{model_config['name']}_loss.png")
+        plt.close()
+        plt.clf()
+    
+    # create folder for summary
+    os.makedirs(f"{models_path}{experiment_name}/summary", exist_ok=True)
+
+    # save summary df as csv
+    summary.to_csv(f"{models_path}{experiment_name}/summary/summary.csv")
+
+    # save loss summary plots
+    fontsize = 5
+    ylabel = "Loss"
+    xlabel = "Epoch"
+    plt.figure(1)
+    plt.legend(legend_params, prop={'size': fontsize})
+    plt.yscale("log")
+    plt.ylabel(ylabel)
+    plt.xlabel(xlabel)
+    plt.tight_layout()
+    plt.savefig(f"{models_path}{experiment_name}/summary/{experiment_name}_train_loss_comparison.pdf")
+    plt.savefig(f"{models_path}{experiment_name}/summary/{experiment_name}_train_loss_comparison.png")
+
+    plt.figure(2)
+    plt.legend(legend_params, prop={'size': fontsize})
+    plt.yscale("log")
+    plt.ylabel(ylabel)
+    plt.xlabel(xlabel)
+    plt.tight_layout()
+    plt.savefig(f"{models_path}{experiment_name}/summary/{experiment_name}_val_loss_comparison.pdf")
+    plt.savefig(f"{models_path}{experiment_name}/summary/{experiment_name}_val_loss_comparison.png")
+
+    # get best model name and min loss from summary df
+    min_loss = summary["val_loss"].min()
+    best_name = summary.loc[summary["val_loss"].idxmin()]["name"]
+    best_epoch = summary.loc[summary["val_loss"].idxmin()]["best_epoch"]
+
+    best_model = {
+            "best_model_name": best_name,
+            "min_loss": min_loss,
+            "epoch": int(best_epoch),
+            }
+
+    with open(f"{models_path}{experiment_name}/summary/best_model.json", 'w') as fp:
+        json.dump(best_model, fp, indent=6)
+
+# check if list has one element, if so return element, else return list
+def c_one(l):
+    if len(l)==1:
+        return l[0]
+    else:
+        return l
+
+def get_entries(df, amount):
+    indices = df.index.unique(level="series")
+    indices = indices[:amount]
+    return df.loc[indices]
+
+if __name__ == "__main__":
+    # dataset to load
+    dataset_name = "pend_test"
+
+    # define experiment identifiers
+    descripor = "test"
+    version = "2"
+
+    # create full name for folder containing experiment
+    experiment_name = f"{dataset_name}_{descripor}_{version}"
+
+    create_summary(experiment_name)

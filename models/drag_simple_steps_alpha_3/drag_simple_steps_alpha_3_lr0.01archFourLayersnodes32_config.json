@@ -1,0 +1,17 @@
+{
+      "name": "drag_simple_steps_alpha_3_lr0.01archFourLayersnodes32",
+      "dataset_name": "drag_simple_steps",
+      "arch": "FourLayers",
+      "epochs": 500,
+      "bs": 4,
+      "context_length": 1,
+      "prediction_length": 2999,
+      "norm": true,
+      "hyper_desc": [
+            "lr",
+            "arch",
+            "nodes"
+      ],
+      "lr": 0.01,
+      "nodes": 32
+}

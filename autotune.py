@@ -1,14 +1,11 @@
 import os
-import shutil
-import json
 import torch
 import random
-import itertools
 import numpy as np
 import matplotlib.pyplot as plt
 from torch.utils.data.dataloader import DataLoader
 from train import test_loop, train_tune
-from helper import check_overwrite, create_dataset, load_data, load_json, norm_name, save_model
+from helper import create_dataset, load_data, load_json, norm_name
 from ray import tune
 from ray.tune import CLIReporter
 from ray.tune.schedulers import ASHAScheduler
@@ -18,7 +15,8 @@ from models import *
 
 # set random seeds
 torch.manual_seed(3)
-random.seed(10)
+random.seed(3)
+np.random.seed(3)
 
 # load dataset
 dataset_name = "drag_mult_step"
@@ -64,7 +62,7 @@ def auto_search(model_config, num_samples = 10, max_num_epochs = 200):
     tuner = tune.Tuner(
         tune.with_resources(
             tune.with_parameters(partial(train_tune, model_config = model_config)),
-            resources={"cpu": 2, "gpu": 0}
+            resources={"cpu": 2, "gpu": 0},
         ),
         tune_config=tune.TuneConfig(
             metric="loss",
@@ -78,7 +76,8 @@ def auto_search(model_config, num_samples = 10, max_num_epochs = 200):
 
     results = tuner.fit()
 
-    best_result = results.get_best_result("loss", "min", "last")
+    # this is for some reason still taking the last model instead of the best one ("all" should have fixed that)
+    best_result = results.get_best_result("loss", "min", "all")
     print("Best trial config: {}".format(best_result.config))
     print("Best trial final validation loss: {}".format(
         best_result.metrics["loss"]))

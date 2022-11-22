@@ -1,4 +1,5 @@
-from helper import load_data, load_dataset, split_sets, gt_name, pred_name
+from helper import load_dataset, load_result, split_sets, scale
+import json
 from sklearn.preprocessing import MinMaxScaler
 import joblib
 
@@ -23,8 +24,8 @@ def build_dataset(name, path = "data/"):
     test_df = df.loc[test_idx]
 
     # fit scaler for input and output on train set to later retrieve only output scaler to inverse transform
-    input_scaler = MinMaxScaler()
-    output_scaler = MinMaxScaler()
+    input_scaler = MinMaxScaler(feature_range=(-1, 1))
+    output_scaler = MinMaxScaler(feature_range=(-1, 1))
     input_scaler.fit(train_df[data_config["inputs"]])
     output_scaler.fit(train_df[data_config["outputs"]])
     joblib.dump(input_scaler, f"data/{data_config['name']}/{data_config['name']}_input_scaler.pkl")
@@ -41,19 +42,21 @@ def build_dataset(name, path = "data/"):
     val_df_scaled.to_csv(f"{savepath}/{name}_val.csv")
     test_df_scaled.to_csv(f"{savepath}/{name}_test.csv")
 
-def scale(df, data_config, input_scaler, output_scaler):
-    df[[f"{x}_norm" for x in input_scaler.get_feature_names_out()]] = input_scaler.transform(df[data_config["inputs"]])
-    df[[f"{x}_norm" for x in output_scaler.get_feature_names_out()]] = output_scaler.transform(df[data_config["outputs"]])
-    return df
+    # get length of datasets
+    ds_len = len(df.index.unique(level="series"))
+    train_len = len(train_df.index.unique(level="series"))
+    val_len = len(val_df.index.unique(level="series"))
+    test_len = len(test_df.index.unique(level="series"))
 
-def inv_scale_results(results, data_config):
+    # update config with dataset lengths
+    data_config["ds_len"] = ds_len
+    data_config["train_len"] = train_len
+    data_config["val_len"] = val_len
+    data_config["test_len"] = test_len
 
-    result_scaler = joblib.load(f"data/{data_config['name']}/{data_config['name']}_outputs_scaler.pkl")
-
-    results[[f"{pred_name(x)}_invnorm" for x in result_scaler.get_feature_names_out()]] = result_scaler.inverse_transform(results[[pred_name(x) for x in result_scaler.get_feature_names_out()]])
-    results[[f"{gt_name(x)}_invnorm" for x in result_scaler.get_feature_names_out()]] = result_scaler.inverse_transform(results[[gt_name(x) for x in result_scaler.get_feature_names_out()]])
-
-    return results
+    # save updated config
+    with open(f"{savepath}/{data_config['name']}.json", "w") as fp:
+        json.dump(data_config, fp, indent=6)
 
 if __name__ == "__main__":
 
@@ -61,14 +64,16 @@ if __name__ == "__main__":
     df, data_config = load_dataset(name)
     df = df.loc[:1]
     # build_dataset(name)
-    scaled_df = scale(df, data_config)
+    # scaled_df = scale(df, data_config)
     # experiment name
-    descriptor = "wholeseries_normed"
-    version = "1"
+    descriptor = "test"
+    version = "2"
     # create full name for folder containing experiment
     experiment_name = f"{data_config['name']}_{descriptor}_{version}"
     suffixes = ["train", "val", "test"] 
     suffix = suffixes[0]
-    results = load_data(experiment_name, f"prediction_{suffix}", path="results/")
+    results = load_result(experiment_name, "test")
+    print(results)
     results = inv_scale_results(results, data_config)
+    print(results)
     

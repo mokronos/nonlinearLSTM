@@ -1,0 +1,2 @@
+,name,lr,arch,nodes,val_loss,best_epoch
+0,drag_simple_steps_alpha_4_lr0.01archFourLayersnodes32,0.01,FourLayers,32,4.444057776709087e-05,1377

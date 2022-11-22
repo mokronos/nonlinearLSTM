@@ -1,0 +1,17 @@
+{
+      "name": "pend_simple_alpha_1_lr0.005archOneLayersnodes32",
+      "dataset_name": "pend_simple",
+      "arch": "OneLayers",
+      "epochs": 500,
+      "bs": 8,
+      "context_length": 1,
+      "prediction_length": 999,
+      "norm": true,
+      "hyper_desc": [
+            "lr",
+            "arch",
+            "nodes"
+      ],
+      "lr": 0.005,
+      "nodes": 32
+}

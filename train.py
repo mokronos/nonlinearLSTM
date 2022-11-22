@@ -43,16 +43,27 @@ def train(model_config):
     # create model
     # number of features
     input_size = len(data_config["inputs"]) + len(data_config["outputs"])
-    # whatever is good? to be determined
-    hidden_size1 = model_config["h1"]
-    hidden_size2 = model_config["h2"]
+
+    # define hidden nodes, pack in list so network can be variable depth (rest gets ignored)
+    # if nodes not None, make all layers have same number of nodes
+    nodes = model_config["nodes"]
+    if nodes:
+        h1 = h2 = h3 = h4 = h5 = nodes
+    else:
+        h1 = model_config["h1"]
+        h2 = model_config["h2"]
+        h3 = model_config["h3"]
+        h4 = model_config["h4"]
+        h5 = model_config["h5"]
+    hidden_nodes = [h1, h2, h3, h4, h5]
+
     # number of outputs
     output_size = len(data_config["outputs"])
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using {device} device")
 
-    model = eval(model_config["arch"])(input_size, hidden_size1, hidden_size2, output_size).to(device)
+    model = eval(model_config["arch"])(input_size, output_size, *hidden_nodes).to(device)
     print(model)
 
     # loop over epochs
@@ -84,6 +95,9 @@ def train(model_config):
 
         # store loss and parameters of current model to later retrieve best model
         val_loss_hist.append(val_loss)
+    
+    # append nan value to train loss to have same length as val loss
+    train_loss_hist.append(np.nan)
 
     return best_state, train_loss_hist, val_loss_hist
 
@@ -201,8 +215,8 @@ def train_tune(config, model_config):
         # test model on validation set
         val_loss, _ = test_loop(val_dataloader, model, loss_fn, device)
 
-        os.makedirs("my_model", exist_ok=True)
+        os.makedirs("ray_checkpoint", exist_ok=True)
         torch.save(
-            (model.state_dict(), optimizer.state_dict()), "my_model/checkpoint.pt")
-        checkpoint = Checkpoint.from_directory("my_model")
+            (model.state_dict(), optimizer.state_dict()), "ray_checkpoint/checkpoint.pt")
+        checkpoint = Checkpoint.from_directory("ray_checkpoint")
         session.report({"loss": val_loss}, checkpoint=checkpoint)

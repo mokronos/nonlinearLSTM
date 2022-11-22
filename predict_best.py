@@ -6,104 +6,124 @@ from helper import create_dataset, create_multiindex, load_data, load_json, norm
 from models import *
 from train import test_loop
 
-# set random seed
-torch.manual_seed(3)
+def predict_best_model(data_name, descriptor, version, variation = "base"):
+    # set random seed
+    torch.manual_seed(3)
 
-#################################################
-# load dataset for test data and variable information
-name = "drag_mult_step"
-data_config = load_json(name, name)
-df_train = load_data(name, "train")
-df_val = load_data(name, "val")
-df_test = load_data(name, "test")
+    #################################################
+    # load dataset for test data and variable information
+    name = data_name
+    data_config = load_json(name, name)
+    df_train = load_data(name, "train")
+    df_val = load_data(name, "val")
+    df_test = load_data(name, "test")
 
-# define experiment identifiers
-descriptor = "test"
-version = "1"
-name = data_config["name"]
-# create full name for folder containing experiment
-experiment_name = f"{name}_{descriptor}_{version}"
+    # define experiment identifiers
+    descriptor = descriptor
+    version = version
+    name = data_config["name"]
+    # create full name for folder containing experiment
+    experiment_name = f"{name}_{descriptor}_{version}"
 
-# prepare folder for saving results
-result_dir = "results/"
-variation = "base"
-prepare_folder(experiment_name, result_dir)
-savepath = f"{result_dir}{experiment_name}"
+    # prepare folder for saving results
+    result_dir = "results/"
+    variation = variation
+    prepare_folder(experiment_name, result_dir)
 
-# load json to figure out what model is the best one
-model_dir = "models/"
-loadpath = f"{model_dir}{experiment_name}"
-with open(f"{loadpath}/best_model.json", 'r') as stream:
-    best_model = json.load(stream)
+    # load json to figure out what model is the best one
+    model_dir = "models/"
+    loadpath = f"{model_dir}{experiment_name}"
+    with open(f"{loadpath}/summary/best_model.json", 'r') as stream:
+        best_model = json.load(stream)
 
-# load best model config
-full_model_name = f"{experiment_name}_{best_model['best_model_name']}"
-with open(f"{loadpath}/{experiment_name}_{best_model['best_model_name']}.json", 'r') as stream:
-    model_config = json.load(stream)
+    # load best model config
+    with open(f"{loadpath}/{best_model['best_model_name']}_config.json", 'r') as stream:
+        model_config = json.load(stream)
 
-samples = data_config["samples"]
-batch_size = model_config["bs"]
+    samples = data_config["samples"]
+    batch_size = model_config["bs"]
 
-# define which column of data to train on depending on if normalization is used
-if model_config["norm"]:
-    input_names = [norm_name(x) for x in data_config["inputs"]]
-    output_names = [norm_name(x) for x in data_config["outputs"]]
-else:
-    input_names = data_config["inputs"]
-    output_names = data_config["outputs"]
-
-
-#################################################
-# create NN and train
-
-device = "cuda" if torch.cuda.is_available() else "cpu"
-# device = "cpu"
-print(f"Using {device} device")
-
-# load model
-model_ext = ".pt"
-model_path = f"{model_dir}{experiment_name}/{full_model_name}{model_ext}"
-
-# number of features
-input_size = len(data_config["inputs"]) + len(data_config["outputs"])
-# whatever is good? to be determined
-hidden_size = 500
-# number of outputs
-output_size = len(data_config["outputs"])
-
-model = eval(model_config["arch"])(input_size,hidden_size,output_size).to(device)
-print(model)
-
-loss_fn = torch.nn.MSELoss()
-
-model.load_state_dict(torch.load(model_path))
-model.eval()
-data = {"train":df_train, "val": df_val,"test": df_test}
-
-for desc, data in data.items():
-
-    ds = create_dataset(data, input_names, output_names, 1, samples - 1)
-
-    dataloader = DataLoader(ds, batch_size=batch_size, shuffle=True)
-    predictions = []
-    ground_truth = []
-    for X,y in dataloader:
-        X, y = X.to(device), y.to(device)
-        pred = model(X).detach().cpu().numpy()
-        gt = y.detach().cpu().numpy()
-        predictions.append(pred)
-        ground_truth.append(gt)
-
-    predictions = np.array(predictions)
-    ground_truth = np.array(ground_truth)
-    predictions = predictions.reshape((-1,)+predictions.shape[-2:])
-    ground_truth = ground_truth.reshape((-1,)+predictions.shape[-2:])
+    # define which column of data to train on depending on if normalization is used
+    if model_config["norm"]:
+        input_names = [norm_name(x) for x in data_config["inputs"]]
+        output_names = [norm_name(x) for x in data_config["outputs"]]
+    else:
+        input_names = data_config["inputs"]
+        output_names = data_config["outputs"]
 
 
-    results = create_multiindex(predictions, ground_truth, data_config, model_config)
+    #################################################
+    # create NN and train
 
-    save_data(results, experiment_name, f"prediction_{desc}", path=result_dir)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    # device = "cpu"
+    print(f"Using {device} device")
 
-    loss, _ = test_loop(dataloader, model, loss_fn, device)
+    # load model
+    model_ext = ".pt"
+    model_path = f"{model_dir}{experiment_name}/{best_model['best_model_name']}_model{model_ext}"
 
-    print(f"loss on {desc}set: {loss}")
+    # create model
+    # number of features
+    input_size = len(data_config["inputs"]) + len(data_config["outputs"])
+
+    # define hidden nodes, pack in list so network can be variable depth (rest gets ignored)
+    # if nodes not None, make all layers have same number of nodes
+    nodes = model_config["nodes"]
+    if nodes:
+        h1 = h2 = h3 = h4 = h5 = nodes
+    else:
+        h1 = model_config["h1"]
+        h2 = model_config["h2"]
+        h3 = model_config["h3"]
+        h4 = model_config["h4"]
+        h5 = model_config["h5"]
+    hidden_nodes = [h1, h2, h3, h4, h5]
+
+    # number of outputs
+    output_size = len(data_config["outputs"])
+
+    model = eval(model_config["arch"])(input_size, output_size, *hidden_nodes).to(device)
+    print(model)
+
+    loss_fn = torch.nn.MSELoss()
+
+    model.load_state_dict(torch.load(model_path))
+    model.eval()
+    data = {"train":df_train, "val": df_val,"test": df_test}
+
+    for desc, data in data.items():
+
+        ds = create_dataset(data, input_names, output_names, 1, samples - 1)
+
+        dataloader = DataLoader(ds, batch_size=batch_size, shuffle=True)
+        predictions = []
+        ground_truth = []
+        for X,y in dataloader:
+            X, y = X.to(device), y.to(device)
+            pred = model(X).detach().cpu().numpy()
+            gt = y.detach().cpu().numpy()
+            predictions.append(pred)
+            ground_truth.append(gt)
+
+        predictions = np.array(predictions)
+        ground_truth = np.array(ground_truth)
+        predictions = predictions.reshape((-1,)+predictions.shape[-2:])
+        ground_truth = ground_truth.reshape((-1,)+predictions.shape[-2:])
+
+
+        results = create_multiindex(predictions, ground_truth, data_config, model_config)
+
+        save_data(results, experiment_name, f"{variation}_prediction_{desc}", path=result_dir)
+
+        loss, _ = test_loop(dataloader, model, loss_fn, device)
+
+        print(f"loss on {desc}set: {loss}")
+
+if __name__ == "__main__":
+
+    data_name = "pend_simple"
+    descriptor = "alpha"
+    version = 4
+    variation = "base"
+    predict_best_model(data_name, descriptor, version, variation)
