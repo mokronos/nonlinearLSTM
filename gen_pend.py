@@ -24,6 +24,7 @@ def pend(y,t,u, g, l, q, freq):
     p_0, v_0 = y
 
     theta = v_0
+    # should have been f_p/(m*l) (but m = l = 1, so in my experiments it doesnt matter)
     theta_v = f_p * np.cos(freq*t) - q * v_0 - (g/l) * np.sin(p_0)
     return [theta, theta_v]
 
@@ -31,40 +32,50 @@ def pend(y,t,u, g, l, q, freq):
 random.seed(3)
 
 # pend_simple
-# init = [[0, x] for x in np.arange(-2,2,0.10)]
+# init = [[0, x] for x in np.arange(-2,2.0,0.1)]
 # spikes_height = [[0, x*0.7,x *0.5,x*0.6] for x in range(100,310,10)]
 # spikes_when = [[0,0.1,0.2,0.4]]
 
-# pend_complex
-amount = 20
 
-init = [[0, x] for x in np.arange(-2,2.1,1)]
+# pend_simple_var
+amount = 5
+init = [[0, x] for x in np.arange(-2,2.1,0.5)]
 spikes_height = []
 for _ in range(amount):
-    tmp = [randrange(-200,201,50)]
-    for i in range(2):
-        tmp.append(tmp[i] + randrange(-70,71,10))
+    tmp = [randrange(-250,251,50),randrange(-250,251,50),randrange(-250,251,50)]
     spikes_height.append(tmp)
+spikes_when = [[0.2,0.5,0.7]]*amount
 
-spikes_when = []
-for _ in range(amount):
-    tmp = [choice([0.1,0.2,0.3]),choice([0.4,0.5,0.6]),choice([0.7,0.8,0.9])]
-    spikes_when.append(tmp)
+# pend_complex
+# amount = 20
 
-step_height = []
-for _ in range(amount):
-    tmp = [randrange(-5,6,1)]
-    for i in range(2):
-        tmp.append(tmp[i] + randrange(-1,2,1))
-    step_height.append(tmp)
+# init = [[0, x] for x in np.arange(-2,2.1,1)]
+# spikes_height = []
+# for _ in range(amount):
+#     tmp = [randrange(-200,201,50)]
+#     for i in range(2):
+#         tmp.append(tmp[i] + randrange(-70,71,10))
+#     spikes_height.append(tmp)
 
-step_when = []
-for _ in range(amount):
-    tmp = [choice([0.1,0.2,0.3]),choice([0.4,0.5,0.6]),choice([0.7,0.8,0.9])]
-    step_when.append(tmp)
+# spikes_when = []
+# for _ in range(amount):
+#     tmp = [choice([0.1,0.2,0.3]),choice([0.4,0.5,0.6]),choice([0.7,0.8,0.9])]
+#     spikes_when.append(tmp)
+
+# step_height = []
+# for _ in range(amount):
+#     tmp = [randrange(-5,6,1)]
+#     for i in range(2):
+#         tmp.append(tmp[i] + randrange(-1,2,1))
+#     step_height.append(tmp)
+
+# step_when = []
+# for _ in range(amount):
+#     tmp = [choice([0.1,0.2,0.3]),choice([0.4,0.5,0.6]),choice([0.7,0.8,0.9])]
+#     step_when.append(tmp)
 
 config = {
-        "name":"pend_complex",
+        "name":"pend_simple_var",
         "function": "pend",
         "samples": 1000,
         "train_val_test_ratio" : [0.6, 0.2, 0.2],
@@ -86,10 +97,10 @@ config = {
         "input_config": {
                 "force_inp":{
                     "types": {
-                        "steps": {
-                            "when": step_when,
-                            "height": step_height
-                            },
+                        # "steps": {
+                        #     "when": step_when,
+                        #     "height": step_height
+                        #     },
                         "spikes": {
                             "when": spikes_when,
                             "height": spikes_height

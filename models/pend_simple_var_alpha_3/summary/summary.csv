@@ -1,0 +1,6 @@
+,name,lr,arch,nodes,val_loss,best_epoch
+0,pend_simple_var_alpha_3_lr0.001archTwoLayersnodes32,0.001,TwoLayers,32,0.0003169066912960261,485
+1,pend_simple_var_alpha_3_lr0.001archTwoLayersnodes64,0.001,TwoLayers,64,0.0002639959566295147,474
+2,pend_simple_var_alpha_3_lr0.001archTwoLayersnodes128,0.001,TwoLayers,128,0.022093763574957848,499
+3,pend_simple_var_alpha_3_lr0.001archTwoLayersnodes256,0.001,TwoLayers,256,0.0193658284842968,497
+4,pend_simple_var_alpha_3_lr0.001archTwoLayersnodes512,0.001,TwoLayers,512,0.022883428260684013,383

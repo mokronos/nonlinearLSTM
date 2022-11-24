@@ -1,0 +1,12 @@
+loss on trainset: 1.7783015512880713e-05
+loss on valset: 5.259611498331651e-05
+loss on testset: 3.2287007343256846e-05
+non-normed theta mse on trainset: 9.319239325122908e-06
+non-normed d_theta mse on trainset: 0.00010425667278468609
+non-normed overall mse on trainset: 5.6787954235915095e-05
+non-normed theta mse on valset: 2.7788197257905267e-05
+non-normed d_theta mse on valset: 0.0003049269726034254
+non-normed overall mse on valset: 0.00016635758220218122
+non-normed theta mse on testset: 1.6998299543047324e-05
+non-normed d_theta mse on testset: 0.00018809795437846333
+non-normed overall mse on testset: 0.00010254812514176592

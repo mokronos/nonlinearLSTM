@@ -159,7 +159,9 @@ def vis_data_1(df, data_config, savepath, suffix):
         info = "; ".join(info)
 
         fig, ax1 = plt.subplots()
-        fig.suptitle(info)
+
+        # title with constants of dataset
+        # fig.suptitle(info)
 
         ax2 = ax1.twinx()
 
@@ -211,7 +213,9 @@ def vis_data_2(df, data_config, savepath, suffix):
 
         fig, ax1 = plt.subplots()
         fig.subplots_adjust(left=0.25)
-        fig.suptitle(info)
+
+        # title with constants of dataset
+        # fig.suptitle(info)
 
         ax2 = ax1.twinx()
         ax3 = ax1.twinx()

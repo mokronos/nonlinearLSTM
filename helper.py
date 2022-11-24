@@ -336,6 +336,7 @@ def gen_data(data_config, func):
 
     return result
 
+
 def create_multiindex(pred, gt, data_config, model_config):
 
     result = pd.DataFrame()
@@ -461,7 +462,11 @@ def create_summary(experiment_name, models_path="models/"):
         loss_hist.plot(linewidth=0.5)
         ylabel = "Loss"
         xlabel = "Epoch"
-        plt.yscale("log")
+        # handle all nan loss models (can't log scale)
+        if loss_hist.isnull().all().all():
+            pass
+        else:
+            plt.yscale("log")
         plt.ylabel(ylabel)
         plt.xlabel(xlabel)
         plt.tight_layout()
@@ -524,15 +529,36 @@ def get_entries(df, amount):
     indices = indices[:amount]
     return df.loc[indices]
 
+def get_mse(results, data_config, desc):
+    mse = []
+    tmp_mem = []
+    pred_names = [pred_name(x) for x in data_config["outputs"]]
+    gt_names = [gt_name(x) for x in data_config["outputs"]]
+    for pname, gtname, outname in zip(pred_names, gt_names, data_config["outputs"]):
+        pred = results[pname]
+        gt = results[gtname]
+        tmp = np.mean((pred-gt)**2)
+        tmp_mem.append(tmp)
+        str = f"non-normed {outname} mse on {desc}set: {tmp}"
+        mse.append(str)
+    mse.append(f"non-normed overall mse on {desc}set: {np.mean(tmp_mem)}")
+    return mse
+
 if __name__ == "__main__":
     # dataset to load
-    dataset_name = "pend_test"
+    dataset_name = "pend_simple_var"
 
     # define experiment identifiers
-    descripor = "test"
-    version = "2"
+    descripor = "alpha"
+    version = "4"
+    variation = "base"
 
     # create full name for folder containing experiment
     experiment_name = f"{dataset_name}_{descripor}_{version}"
 
-    create_summary(experiment_name)
+    # create test pandas dataframe
+    results_train = load_result(experiment_name, variation, "train")
+    data_config = load_json(dataset_name, dataset_name)
+    get_mse(results_train, data_config, "train")
+
+

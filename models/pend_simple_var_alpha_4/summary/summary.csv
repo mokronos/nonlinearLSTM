@@ -1,0 +1,2 @@
+,name,lr,arch,nodes,val_loss,best_epoch
+0,pend_simple_var_alpha_4_lr0.001archTwoLayersnodes64,0.001,TwoLayers,64,5.259611862129532e-05,2285

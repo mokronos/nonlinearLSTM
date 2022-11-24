@@ -1,0 +1,17 @@
+{
+      "name": "pend_complex_alpha_2_lr0.01archOneLayersnodes32",
+      "dataset_name": "pend_complex",
+      "arch": "OneLayers",
+      "epochs": 500,
+      "bs": 20,
+      "context_length": 1,
+      "prediction_length": 999,
+      "norm": true,
+      "hyper_desc": [
+            "lr",
+            "arch",
+            "nodes"
+      ],
+      "lr": 0.01,
+      "nodes": 32
+}

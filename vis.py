@@ -11,9 +11,11 @@ plt.rcParams['savefig.dpi'] = 300
 # define all names
 # dataset name
 # dataset_name = "pend_simple"
-dataset_name = "pend_complex"
+dataset_name = "pend_simple_var"
+# dataset_name = "pend_complex"
 # dataset_name = "drag_simple_steps"
 # dataset_name = "drag_complex"
+# dataset_name = "drag_complex_var"
 
 # experiment name
 descriptor = "alpha"
@@ -39,22 +41,22 @@ df_val = load_data(dataset_name, "val")
 df_test = load_data(dataset_name, "test")
 
 # load results for best model
-# results_train = load_result(experiment_name, variation, "train")
-# results_val = load_result(experiment_name, variation, "val")
-# results_test = load_result(experiment_name, variation, "test")
+results_train = load_result(experiment_name, variation, "train")
+results_val = load_result(experiment_name, variation, "val")
+results_test = load_result(experiment_name, variation, "test")
 
 
-df_train = get_entries(df_train, 5)
-df_val = get_entries(df_val, 5)
-df_test = get_entries(df_test, 5)
+# df_train = get_entries(df_train, 10)
+# df_val = get_entries(df_val, 10)
+# df_test = get_entries(df_test, 10)
 
 for suff in suffixes:
     if len(data_config["outputs"]) == 1:
-        vis_data_1(df_train, data_config, data_savepath, f"{dataset_name}_{suff}")
+        vis_data_1(eval(f"df_{suff}"), data_config, data_savepath, f"{dataset_name}_{suff}")
     else:
-        vis_data_2(df_train, data_config, data_savepath, f"{dataset_name}_{suff}")
+        vis_data_2(eval(f"df_{suff}"), data_config, data_savepath, f"{dataset_name}_{suff}")
 
-# if len(data_config["outputs"]) == 1:
-#     vis_results_1(results_test, data_config, experiment_savepath, f"{experiment_name}_results") 
-# else:
-#     vis_results_2(results_test, data_config, experiment_savepath, f"{experiment_name}_results") 
+if len(data_config["outputs"]) == 1:
+    vis_results_1(results_test, data_config, experiment_savepath, f"{experiment_name}_results") 
+else:
+    vis_results_2(results_test, data_config, experiment_savepath, f"{experiment_name}_results") 

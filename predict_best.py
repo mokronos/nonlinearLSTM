@@ -2,7 +2,7 @@ import json
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
-from helper import create_dataset, create_multiindex, load_data, load_json, norm_name, prepare_folder, save_data
+from helper import create_dataset, create_multiindex, load_data, load_json, norm_name, prepare_folder, save_data, get_mse
 from models import *
 from train import test_loop
 
@@ -92,6 +92,9 @@ def predict_best_model(data_name, descriptor, version, variation = "base"):
     model.eval()
     data = {"train":df_train, "val": df_val,"test": df_test}
 
+    loss_mem = []
+    mse_mem = []
+
     for desc, data in data.items():
 
         ds = create_dataset(data, input_names, output_names, 1, samples - 1)
@@ -118,12 +121,25 @@ def predict_best_model(data_name, descriptor, version, variation = "base"):
 
         loss, _ = test_loop(dataloader, model, loss_fn, device)
 
-        print(f"loss on {desc}set: {loss}")
+        mse_mem.extend(get_mse(results,data_config, desc))
+        str = f"loss on {desc}set: {loss}"
+        loss_mem.append(str)
+    
+    # write loss values to file
+    with open(f"{result_dir}{experiment_name}/{variation}_losses.txt", 'w') as stream:
+        stream.write("\n".join(loss_mem))
+        stream.write("\n")
+        stream.write("\n".join(mse_mem))
 
 if __name__ == "__main__":
 
-    data_name = "pend_simple"
+    # dataset_name = "drag_simple_steps"
+    # dataset_name = "drag_complex"
+    # dataset_name = "drag_complex_var"
+    # dataset_name = "pend_simple"
+    # dataset_name = "pend_simple_var"
+    dataset_name = "pend_complex"
     descriptor = "alpha"
     version = 4
     variation = "base"
-    predict_best_model(data_name, descriptor, version, variation)
+    predict_best_model(dataset_name, descriptor, version, variation)

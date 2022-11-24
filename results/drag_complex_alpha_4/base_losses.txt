@@ -1,0 +1,9 @@
+loss on trainset: 5.094787098869347e-07
+loss on valset: 5.054741336607549e-07
+loss on testset: 5.510264031727274e-07
+non-normed velocity mse on trainset: 0.0005700187757611275
+non-normed overall mse on trainset: 0.0005700187757611275
+non-normed velocity mse on valset: 0.0005655383574776351
+non-normed overall mse on valset: 0.0005655383574776351
+non-normed velocity mse on testset: 0.0006165049853734672
+non-normed overall mse on testset: 0.0006165049853734672

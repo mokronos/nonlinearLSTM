@@ -52,8 +52,45 @@ def drag(y,t,u,m,c_d,rho,area):
 # height = [[0, x*1.5**1, x*1.5**2,x*1.5**3] for x in range(10,210,10)]
 # when = [[0,0.1,0.3,0.6]]*20
 
+
 # drag_complex
-init = [[x] for x in range(0, 10, 2)]
+# initial condition doesnt change much, but adds duplicate samples to validation set
+# init = [[x] for x in range(0, 10, 2)]
+
+# amount = 20
+# step_height = []
+# for _ in range(amount):
+#     tmp = [randrange(100,201,50)]
+#     for i in range(2):
+#         tmp.append(tmp[i] + randrange(-30,71,10))
+#     step_height.append(tmp)
+
+# step_when = []
+# for _ in range(amount):
+#     tmp = [choice([0.1,0.2,0.3]),choice([0.4,0.5,0.6]),choice([0.7,0.8,0.9])]
+#     step_when.append(tmp)
+
+# saw_height = []
+# for _ in range(amount):
+#     tmp = [(0,randrange(100,201,50))]
+#     for i in range(1):
+#         x = tmp[i][1]
+#         y = tmp[i][1] + randrange(-30,71,10)
+#         value = (x,y)
+
+#         tmp.append(value)
+#     saw_height.append(tmp)
+
+# saw_when = []
+# for _ in range(amount):
+#     tmp = [(choice([0.1,0.2]),choice([0.3,0.4])),(choice([0.6,0.7]),choice([0.8,0.9]))]
+#     saw_when.append(tmp)
+
+
+# drag_complex var
+# initial condition doesnt change much, but adds duplicate samples to validation set
+# init = [[x] for x in range(0, 10, 2)]
+init = [[0]]
 
 amount = 20
 step_height = []
@@ -65,7 +102,7 @@ for _ in range(amount):
 
 step_when = []
 for _ in range(amount):
-    tmp = [choice([0.1,0.2,0.3]),choice([0.4,0.5,0.6]),choice([0.7,0.8,0.9])]
+    tmp = [choice([0,0.1,0.2,0.3]),choice([0.4,0.5,0.6]),choice([0.7,0.8,0.9])]
     step_when.append(tmp)
 
 saw_height = []
@@ -81,12 +118,12 @@ for _ in range(amount):
 
 saw_when = []
 for _ in range(amount):
-    tmp = [(choice([0.1,0.2]),choice([0.3,0.4])),(choice([0.6,0.7]),choice([0.8,0.9]))]
+    tmp = [(choice([0,0.1,0.2]),choice([0.3,0.4])),(choice([0.5,0.6,0.7]),choice([0.8,0.9]))]
     saw_when.append(tmp)
 
 
 config = {
-        "name":"drag_complex",
+        "name":"drag_complex_var",
         "function": "drag",
         "samples": 3000,
         "train_val_test_ratio" : [0.6, 0.2, 0.2],

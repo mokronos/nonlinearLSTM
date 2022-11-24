@@ -16,13 +16,16 @@ torch.manual_seed(3)
 random.seed(10)
 
 # dataset to load
-# dataset_name = "pend_simple"
 # dataset_name = "drag_simple_steps"
-dataset_name = "drag_complex"
+# dataset_name = "drag_complex"
+# dataset_name = "pend_simple"
+# dataset_name = "pend_complex"
+# dataset_name = "drag_complex_var"
+dataset_name = "pend_simple_var"
 
 # define experiment identifiers
 descriptor = "alpha"
-version = "3"
+version = "4"
 # create full name for folder containing experiment
 experiment_name = f"{dataset_name}_{descriptor}_{version}"
 
@@ -34,8 +37,8 @@ experiment_config = {
         "name": experiment_name,
         "dataset_name" : dataset_name,
         "arch": "TwoLayers",
-        "epochs" : 500,
-        "bs" : 20,
+        "epochs" : 5000,
+        "bs" : 9,
         "context_length": 1,
         "prediction_length": data_config["samples"] - 1,
         "norm": True,
@@ -44,11 +47,11 @@ experiment_config = {
 # define experiment parameters (gets added to experiment_config later)
 # learning rate
 # lr = [0.01,0.005,0.001,0.0005,0.0001]
-lr = [0.01]
+lr = [0.001]
 arch = ["TwoLayers"]
 # arch = ["OneLayers", "TwoLayers", "ThreeLayers", "FourLayers", "FiveLayers"]
-nodes = [32,64,128,256,512]
-# nodes = [32]
+# nodes = [32,64,128,256,512]
+nodes = [64]
 
 # descriptors for the hyperparameters
 # add to model_config later
@@ -99,8 +102,12 @@ for params in hyper:
 
     
     # save train and val loss to plot comparison
-    best_val_loss= np.nanmin(val_loss_hist)
-    best_epoch = np.nanargmin(val_loss_hist)
+    if np.isnan(val_loss_hist).all():
+        best_val_loss = np.nan
+        best_epoch = 0
+    else:
+        best_val_loss= np.nanmin(val_loss_hist)
+        best_epoch = np.nanargmin(val_loss_hist)
 
     # create dict for json
     best_stats = {

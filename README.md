@@ -194,9 +194,15 @@ questions:
 - can i write in English? yes
 - pages? ~20 (probably more, lots of figures)
 
-1. make one simple and one complex dataset for both function
-2. train on both datasets, go through hyperparameters
-3. compare results
+- maybe redo simple pendulum, heights of spikes don't vary
+- redo complex drag, initial condition change creates almost the same samples, training too close to validation/test
+- complex pend might be fine, initial condition changes whole sample, not just beginning
 
+## Training times
+- 120 samples, 3000 length, 500 epochs
+    - five layer 30 min
+    - two layer 15 min 
+    - width, lr not really affecting time
+    - 5000 epochs, 118 mins (two layers/32 nodes)
 ~ Deadline: 1.dez
 20.6. anmeldung

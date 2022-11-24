@@ -1,0 +1,17 @@
+{
+      "name": "pend_simple_var_alpha_4_lr0.001archTwoLayersnodes64",
+      "dataset_name": "pend_simple_var",
+      "arch": "TwoLayers",
+      "epochs": 5000,
+      "bs": 9,
+      "context_length": 1,
+      "prediction_length": 999,
+      "norm": true,
+      "hyper_desc": [
+            "lr",
+            "arch",
+            "nodes"
+      ],
+      "lr": 0.001,
+      "nodes": 64
+}
