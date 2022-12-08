@@ -10,7 +10,7 @@ This is just a overview of the different files and folders in this repository.
 - odes: contains the ODEs used for the different datasets
 - results: contains the results as csv of the different models
 - test: should contain unit tests, but is currently empty
-- ray_results: contains the results of the hyperparameter search with raytune, but not fully working
+- ray_results: contains the results of the hyperparameter search with raytune, but not fully working (isn't tracked right now, but will be created if script is ran)
 
 ## Files
 - autotune.py: script for hyperparameter search with raytune, gpu not working for some reason, need to still evaluate trained models
