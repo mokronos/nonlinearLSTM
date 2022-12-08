@@ -75,6 +75,7 @@ The code is not super well documented and in parts I created some non optimal so
 
 
 - source for generic stuff, lecture?, basics book?
+    - optimization, learning rate stuff
 - code zip email/faubox
 
 ~ Deadline: 15.dez

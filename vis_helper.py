@@ -3,6 +3,8 @@ from helper import c_one, pred_name, gt_name, error_name, norm_name
 
 
 def vis_results_1(results, data_config, savepath, suffix):
+    plt.rcParams['font.size'] = 16
+
     indices = results.index.unique(level="series")
     for i in indices:
 
@@ -28,15 +30,16 @@ def vis_results_1(results, data_config, savepath, suffix):
 
         ax[0].plot(pred,cout0, label=c_one([fr"${x}_{{pred}}$" for x in data_config["output_labels"]]))
         ax[0].plot(gt, cout0gt, label=c_one([fr"${x}_{{gt}}$" for x in data_config["output_labels"]]))
-        ax[0].set_ylabel(c_one([fr"${x}$ in ${y}$" for x, y in zip(data_config["output_labels"], data_config["output_units"])][0]))
-        ax[0].set_xlabel("time in 0.01s steps")
+        ax[0].set_ylabel(c_one([fr"${x}$ in {y}" for x, y in zip(data_config["output_labels"], data_config["output_units"])][0]))
+        ax[0].set_xlabel(r"time in $0.01$ s steps")
         ax[0].legend()
 
         ax[1].plot(error, cerror0, label=c_one([fr"${x}_{{error}}$" for x in data_config["output_labels"]]))
+        ax[1].set_ylim([0, 9])
         err_unit = data_config["error_units"][0]
         out_label = data_config["output_labels"][0]
-        ax[1].set_ylabel(fr"${out_label}_{{error}}$ in ${err_unit}$")
-        ax[1].set_xlabel("time in 0.01s steps")
+        ax[1].set_ylabel(fr"${out_label}_{{error}}$ in $\mathsf{{{err_unit}}}$")
+        ax[1].set_xlabel(r"time in $0.01$ s steps")
         ax[1].legend()
 
 
@@ -46,6 +49,7 @@ def vis_results_1(results, data_config, savepath, suffix):
         plt.clf()
 
 def vis_results_2(results, data_config, savepath, suffix):
+    plt.rcParams['font.size'] = 16
     indices = results.index.unique(level="series")
     for i in indices:
 
@@ -68,10 +72,10 @@ def vis_results_2(results, data_config, savepath, suffix):
         ax21 = ax[1]
         ax22 = ax[1].twinx()
 
-        ax12.spines.left.set_position(("axes", -0.2))
+        ax12.spines.left.set_position(("axes", -0.35))
         ax12.yaxis.set_label_position("left")
         ax12.yaxis.set_ticks_position("left")
-        ax22.spines.left.set_position(("axes", -0.2))
+        ax22.spines.left.set_position(("axes", -0.35))
         ax22.yaxis.set_label_position("left")
         ax22.yaxis.set_ticks_position("left")
 
@@ -105,26 +109,34 @@ def vis_results_2(results, data_config, savepath, suffix):
 
         c21 = cerror0
         c22 = cerror1
-        fontsize = 6
+        fontsize = 14
         
         p1, = ax11.plot(pred0, c11, label=fr"${label0}_{{pred}}$")
         p2, = ax11.plot(gt0, c11_gt, label=fr"${label0}_{{gt}}$")
-        ax11.set_ylabel(fr"${label0}$ in ${unit0}$")
 
         p3, = ax12.plot(pred1, c12, label=fr"${label1}_{{pred}}$")
         p4, = ax12.plot(gt1, c12_gt, label=fr"${label1}_{{gt}}$")
-        ax12.set_ylabel(fr"${label1}$ in ${unit1}$")
 
-        ax11.set_xlabel("time in 0.01s steps")
-        ax11.legend(handles=[p1, p2, p3, p4], fontsize=fontsize)
+        ax11.set_ylim([-1, 1])
+        ax12.set_ylim([-3, 3])
+
+        ax11.set_ylabel(fr"${label0}$ in {unit0}")
+        ax12.set_ylabel(fr"${label1}$ in {unit1}")
+
+        ax11.set_xlabel(r"time in $0.01$ s steps")
+        ax12.legend(handles=[p1, p2, p3, p4], fontsize=fontsize)
 
         p5, = ax21.plot(error0, c21, label=fr"${label0}_{{error}}$")
-        ax21.set_ylabel(fr"${label0}_{{error}}$ in ${uniterr0}$")
 
         p6, = ax22.plot(error1, c22, label=fr"${label1}_{{error}}$")
-        ax22.set_ylabel(fr"${label1}_{{error}}$ in ${uniterr1}$")
 
-        ax21.set_xlabel("time in 0.01s steps")
+        ax21.set_ylim([0, 0.0005])
+        ax22.set_ylim([0, 0.008])
+
+        ax21.set_ylabel(fr"${label0}_{{error}}$ in $\mathsf{{{uniterr0}}}$")
+        ax22.set_ylabel(fr"${label1}_{{error}}$ in $\mathsf{{{uniterr1}}}$")
+
+        ax21.set_xlabel(r"time in $0.01$ s steps")
 
         ax11.yaxis.label.set_color(p1.get_color())
         ax12.yaxis.label.set_color(p3.get_color())
@@ -139,7 +151,7 @@ def vis_results_2(results, data_config, savepath, suffix):
         ax11.tick_params(axis='x', **tkw)
         ax21.tick_params(axis='x', **tkw)
 
-        ax21.legend(handles=[p5, p6], fontsize=fontsize)
+        ax22.legend(handles=[p5, p6], fontsize=fontsize)
 
 
         plt.tight_layout()
@@ -150,6 +162,7 @@ def vis_results_2(results, data_config, savepath, suffix):
 
 
 def vis_data_1(df, data_config, savepath, suffix):
+    plt.rcParams['font.size'] = 16
     indices = df.index.unique(level="series")
     for i in indices:
 
@@ -182,9 +195,12 @@ def vis_data_1(df, data_config, savepath, suffix):
         ax1.set_zorder(ax2.get_zorder()+1)
         ax1.patch.set_visible(False)
 
-        ax1.set_xlabel(r"time in $0.01 s$")
-        ax1.set_ylabel(c_one([f"${x}$ in ${y}$" for x, y in zip(data_config["output_labels"], data_config["output_units"])]))
-        ax2.set_ylabel(c_one([f"${x}$ in ${y}$" for x, y in zip(data_config["input_labels"], data_config["input_units"])]))
+        ax1.set_xlabel(r"time in $0.01$ s steps")
+        ax1.set_ylabel(c_one([f"${x}$ in {y}" for x, y in zip(data_config["output_labels"], data_config["output_units"])]))
+        ax2.set_ylabel(c_one([f"${x}$ in {y}" for x, y in zip(data_config["input_labels"], data_config["input_units"])]))
+
+        ax1.set_ylim([0, 100])
+        ax2.set_ylim([0, 400])
 
         ax1.yaxis.label.set_color(p1.get_color())
         ax2.yaxis.label.set_color(p2.get_color())
@@ -194,7 +210,7 @@ def vis_data_1(df, data_config, savepath, suffix):
         ax2.tick_params(axis='y', colors=p2.get_color(), **tkw)
         ax1.tick_params(axis='x', **tkw)
 
-        ax1.legend(handles=[p1, p2])
+        ax2.legend(handles=[p1, p2])
 
         plt.tight_layout()
         plt.savefig(f"{savepath}/{suffix}{i}.pdf")
@@ -203,6 +219,7 @@ def vis_data_1(df, data_config, savepath, suffix):
         plt.clf()
 
 def vis_data_2(df, data_config, savepath, suffix):
+    plt.rcParams['font.size'] = 16
     indices = df.index.unique(level="series")
     for i in indices:
 
@@ -220,7 +237,7 @@ def vis_data_2(df, data_config, savepath, suffix):
         ax2 = ax1.twinx()
         ax3 = ax1.twinx()
 
-        ax2.spines.left.set_position(("axes", -0.2))
+        ax2.spines.left.set_position(("axes", -0.35))
         ax2.yaxis.set_label_position("left")
         ax2.yaxis.set_ticks_position("left")
 
@@ -237,9 +254,14 @@ def vis_data_2(df, data_config, savepath, suffix):
         p2, = ax2.plot(data[data_config["outputs"][1]],cout1, label=f"${data_config['output_labels'][1]}$")
         p3, = ax3.plot(data[data_config["inputs"]],cinp, label=f"${c_one(data_config['input_labels'])}$")
 
-        ax1.set_xlabel(r"time in $0.01 s$")
-        y1, y2 = c_one([f"${x}$ in ${y}$" for x, y in zip(data_config["output_labels"], data_config["output_units"])])
-        y3 = c_one([f"${x}$ in ${y}$" for x, y in zip(data_config["input_labels"], data_config["input_units"])])
+        ax1.set_ylim([-1, 1])
+        ax2.set_ylim([-3, 3])
+        # cant set limits for input, varies between steps and spikes
+        # ax3.set_ylim([0, 400])
+
+        ax1.set_xlabel(r"time in $0.01$ s steps")
+        y1, y2 = c_one([f"${x}$ in {y}" for x, y in zip(data_config["output_labels"], data_config["output_units"])])
+        y3 = c_one([f"${x}$ in {y}" for x, y in zip(data_config["input_labels"], data_config["input_units"])])
 
         ax1.set_ylabel(y1)
         ax2.set_ylabel(y2)
@@ -254,7 +276,7 @@ def vis_data_2(df, data_config, savepath, suffix):
         ax2.tick_params(axis='y', colors=p2.get_color(), **tkw)
         ax3.tick_params(axis='y', colors=p3.get_color(), **tkw)
         ax1.tick_params(axis='x', **tkw)
-        ax1.legend(handles=[p1,p2,p3])
+        ax3.legend(handles=[p1,p2,p3])
 
         plt.tight_layout()
         plt.savefig(f"{savepath}/{suffix}{i}.pdf")
