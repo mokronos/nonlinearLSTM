@@ -1,5 +1,17 @@
 # nonlinearLSTM
-Trying to train LSTMs for non-linear ODEs.
+
+Differential equations are essential for describing the behavior of nonlinear dy-
+namic systems over time. But ordinary methods cannot calculate the solutions if
+the analytical form is unknown. This work shows the ability of long-short-term-
+memory networks (LSTMs) to predict nonlinear dynamic systems over time. Time
+series datasets are generated from differential equations of a force pushing an ob-
+ject with drag and a pendulum with an external force and friction. The models
+are then trained with multiple hyperparameters and training difficulties are high-
+lighted. The best models are subsequently evaluated and shown to perform well.
+The methods show potential to be used with experimentally obtained data from
+differential equations with unknown analytical forms.
+
+This repository contains the code for the work with the above abstract.
 
 # Folders and files
 This is just a overview of the different files and folders in this repository.
@@ -61,6 +73,18 @@ The steps to get a model off the ground are the following:
 
 Most of these things should work with other datasets with more inputs and outputs, but some things might need to be adjusted. Especially the visualizations.
 
+# Requirements
+Im just listing some of the packages I used, but it might be better to just go through the files and look whats necessary. Python 3.8.10 was used but newer and slightly older versions should work too.
+- pytorch (for the machine learning, gpu version is preferred, but cpu should work too with no changes)
+- matplotlib (for the visualizations)
+- numpy (for the data manipulation)
+- pandas (for the data manipulation, main carrier for the data)
+- scipy (for the odeint() solver)
+- joblib (for saving the scaler)
+- sklearn (for the MinMaxScaler)
+- raytune (only for automatic hyperparameter tuning)
+- other packages should all be in the standard python library
+
 # Other questions
 
 The code is not super well documented and in parts I created some non optimal solutions to problems. So if there are questions about the models/architectures, optimizer and other things in the process, I would first recommend to read the nonlinearLSTM.pdf file and/or check the code itself. If there are still questions after that feel free to contact me via <sebastian.hirt@fau.de> and I'll try to answer any open questions.
@@ -72,11 +96,3 @@ The code is not super well documented and in parts I created some non optimal so
     - two layer 15 min 
     - width, lr not really affecting time
     - 5000 epochs, 118 mins (two layers/32 nodes)
-
-
-- source for generic stuff, lecture?, basics book?
-    - optimization, learning rate stuff
-- code zip email/faubox
-
-~ Deadline: 15.dez
-20.6. anmeldung
