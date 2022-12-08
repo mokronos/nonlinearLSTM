@@ -11,6 +11,7 @@ import pandas as pd
 import itertools
 from data import Gen
 from matplotlib import pyplot as plt
+from matplotlib import rc
 
 class BasicDataset(Dataset):
 
@@ -418,6 +419,10 @@ def create_summary(experiment_name, models_path="models/"):
     # make dpi of matplotlib 300
     plt.rcParams['figure.dpi'] = 300
     plt.rcParams['savefig.dpi'] = 300
+    plt.rcParams['font.size'] = 16
+    rc('font', **{'family': 'sans-serif', 'sans-serif': ['Computer Modern']})
+    rc('text', usetex=True)
+    rc('text.latex', preamble=r'\usepackage{sansmath}\sansmath')
 
     # get paths of all model_configs
     paths = glob.glob(f"{models_path}{experiment_name}/*_config.json")
@@ -449,7 +454,24 @@ def create_summary(experiment_name, models_path="models/"):
         loss_hist = pd.read_csv(f"{models_path}{experiment_name}/{model_config['name']}_loss.csv", index_col=0)
 
         # save list with descriptions of models to later use as legend
-        param_desc = "; ".join([f"{desc}: {model_config[desc]}" for desc in model_config["hyper_desc"]])
+        # param_desc = "; ".join([f"{desc}: {model_config[desc]}" for desc in model_config["hyper_desc"]])
+
+        sizes = {"OneLayers":1, "TwoLayers":2, "ThreeLayers":3, "FourLayers":4, "FiveLayers":5}
+        # custom legend, replaced architecture description with layer count
+        # param_desc = "; ".join([f"{desc}: {model_config[desc]}" if desc != "arch" else f"layers: {sizes[model_config[desc]]}" for desc in model_config["hyper_desc"]])
+
+        # create custom legend for specific hyperparameters
+        # get all the hyperparameter descriptions 
+        lr = model_config["lr"]
+        arch = model_config["arch"]
+        layers = sizes[arch]
+        nodes = model_config["nodes"]
+
+        # create legend entry
+        param_desc = f"lr: {lr}; {layers}x{nodes}"
+
+
+        param_desc.replace
         legend_params.append(param_desc)
 
         plt.figure(1)
@@ -482,11 +504,11 @@ def create_summary(experiment_name, models_path="models/"):
     summary.to_csv(f"{models_path}{experiment_name}/summary/summary.csv")
 
     # save loss summary plots
-    fontsize = 5
+    fontsize = 14
     ylabel = "Loss"
     xlabel = "Epoch"
     plt.figure(1)
-    plt.legend(legend_params, prop={'size': fontsize})
+    plt.legend(legend_params,loc="best", prop={'size': fontsize})
     plt.yscale("log")
     plt.ylabel(ylabel)
     plt.xlabel(xlabel)
@@ -495,13 +517,15 @@ def create_summary(experiment_name, models_path="models/"):
     plt.savefig(f"{models_path}{experiment_name}/summary/{experiment_name}_train_loss_comparison.png")
 
     plt.figure(2)
-    plt.legend(legend_params, prop={'size': fontsize})
+    plt.legend(legend_params,loc="best", prop={'size': fontsize})
     plt.yscale("log")
     plt.ylabel(ylabel)
     plt.xlabel(xlabel)
     plt.tight_layout()
     plt.savefig(f"{models_path}{experiment_name}/summary/{experiment_name}_val_loss_comparison.pdf")
     plt.savefig(f"{models_path}{experiment_name}/summary/{experiment_name}_val_loss_comparison.png")
+    plt.close()
+    plt.clf()
 
     # get best model name and min loss from summary df
     min_loss = summary["val_loss"].min()

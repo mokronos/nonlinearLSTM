@@ -1,6 +1,0 @@
-,name,lr,arch,nodes,val_loss,best_epoch
-0,pend_simple_alpha_1_lr0.0001archOneLayersnodes32,0.0001,OneLayers,32,0.040874168276786804,54
-1,pend_simple_alpha_1_lr0.0005archOneLayersnodes32,0.0005,OneLayers,32,0.0113036734983325,499
-2,pend_simple_alpha_1_lr0.001archOneLayersnodes32,0.001,OneLayers,32,0.008605786599218845,499
-3,pend_simple_alpha_1_lr0.005archOneLayersnodes32,0.005,OneLayers,32,0.03481415659189224,496
-4,pend_simple_alpha_1_lr0.01archOneLayersnodes32,0.01,OneLayers,32,0.004086651839315891,478
