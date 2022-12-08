@@ -1,208 +1,81 @@
 # nonlinearLSTM
-Trying to train LSTMs for non-linear models.
+Trying to train LSTMs for non-linear ODEs.
 
-## read stuff
-- http://karpathy.github.io/2015/05/21/rnn-effectiveness/ done
-    - really good introduction to sequential models
-    - mostly focused on language models, however many general tips
-- https://www.researchgate.net/publication/349681865_Deep_Learning_with_Real_Data_and_the_Chaotic_Double_Pendulum mostly done
-    - pretty similar to my work, good reference for code examples
-- https://towardsdatascience.com/lstm-for-time-series-prediction-de8aeb26f2ca done
-    - good explanation of inner workings of lstm cells
-    - nice example with lstm regression
-- https://thenerdstation.medium.com/how-to-unit-test-machine-learning-code-57cf6fd81765
-    - some general tests one can run to maybe catch some bugs in your machine learning pipeline 
-    - wanted to make it a habit to unit test my stuff more, as it is essential with bigger projects
-    - should help with bug fixing too
-- https://www.mathworks.com/help/deeplearning/ug/sequence-to-sequence-regression-using-deep-learning.html
-- https://towardsdatascience.com/a-long-short-term-memory-network-to-model-nonlinear-dynamic-systems-72f703885818
-    - pretty much exactly what i want
-    - author remarks that when not giving the ground truth at every time step as input (making prediction window longer) the results get way worse, as errors add up
-- https://www.researchgate.net/publication/327356232_Non-linear_system_modeling_using_LSTM_neural_network://www.researchgate.net/publication/327356232_Non-linear_system_modeling_using_LSTM_neural_networks 
-    - says that LSTMs don't work well when modeling nonlinear systems
-    - but their method works better
-- https://www.researchgate.net/publication/318333660_A_new_concept_using_LSTM_Neural_Networks_for_dynamic_system_identification
-    - last paper cited this as an example of LSTMs not working well for nonlinear modeling
-- https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=9105007
-- https://cpb-us-e1.wpmucdn.com/campuspress-test.yale.edu/dist/7/677/files/2016/09/paper_LSTM_2017ACC-1sz2yir.pdf
-- https://sci-hub.se/10.1007/s40435-020-00673-4 , A LSTM based prediction model for nonlinear dynamical systems with chaotic itinerancy
-    
-# important papers
-- https://arxiv.org/pdf/1503.04069.pdf?fbclid=IwAR377Jhphz_xGSSThcqGUlAx8OJc_gU6Zwq8dABHOdS4WNOPRXA5LcHOjUg
-    - shows that learning rate and network size are most influential hyperparameters
-- http://www.bioinf.jku.at/publications/older/2604.pdf
-    - original lstm paper
+# Folders and files
+This is just a overview of the different files and folders in this repository.
+## Folders
+- data: contains the data used for training and testing
+- models: contains the trained models and plots of the training/hyperparameter search process
+- figures: contains the generated figures for the different datasets and model results
+- odes: contains the ODEs used for the different datasets
+- results: contains the results as csv of the different models
+- test: should contain unit tests, but is currently empty
+- ray_results: contains the results of the hyperparameter search with raytune, but not fully working
 
-- https://sci-hub.se/10.1109/msp.2008.930649
-    - mse source
+## Files
+- autotune.py: script for hyperparameter search with raytune, gpu not working for some reason, need to still evaluate trained models
+- build_dataset.py: script for building the datasets:
+    - splitting into train, validation and test sets
+    - scaling the data (Min-Max scaling) and saving scaler for inverse scale later
+    - saving the datasets as csv files
+- data.py: generator object for creating series with an ODE 
+- gen_x scripts: scripts for generating the data for the different datasets; settings are defined in the config json, which then generates input with the generator from data.py
+    - gen_template: can be used as template for other datasets
+    - gen_drag: generates data for the drag model
+    - gen_pend: generates data for the pendulum model
+    - gen_getriebe: generates data for the gear model
+    - gen_thermal: generates data for the thermal model
+- helper.py: helper functions for the different scripts
+    - transformations of names
+    - dataset creations (cutting series into correct format)
+    - dataset splitting
+    - loading/writing different files
+    - generation of different input shapes (those defined in the config json)
+    - data manipulation (mostly multiindexing of pandas dataframes)
+    - some sorting and summary creating for the results
+- models.py: contains different pytorch lstm models, currently only different amount of layers (probably changed so that the depth is a variable)
+- predict_best.py: loads the best model of the specified dataset and experiment, runs the model on train/val/test set and saves results in /results
+- search_hyper.py: takes the training/test functions from train.py and runs the hyperparameter search for the specified parameters for a dataset
+- train.py: contains training and testing loops ready for manual and raytune hyperparameter search
+- summarize.py: takes summarize function from helper.py and loops over all the models to summarize the results and create plots of training progress
+- vis.py: uses the functions from vis_helper.py to create the plots for the different datasets and models
+- vis_helper.py: contains the functions for creating the plots for the different datasets and models (this started out really general, but is now pretty specific for datasets with 1 or 2 variables)
 
+# Pipeline:
 
-- a lot of literature for language models (predicting letter after letter) --> classification
-- but most things can be applied for lstm regression as well
-## Create data from classic models
-- create nonlinear state space models
-    - given models work (heat model/ transmission)
-    - more general solution better (just plug function and parameters/initials in --> train network)
-    - but mostly done
-- add measuring noise at output to simulate real world data acquisition
-    - done, but only necessary to add later, when no other bugs
-- create training and test datasets
-    - done, but not in general
-    - input: 0 --> n-1, [batch size, sequence length, number of features] (batch size = number of different sequences)
-    - labels: 1 --> n
-    - easy to just increase/change the number of features to add inputs from ode (current, change of first value, system input, etc.)
-    
-## Create LSTM
-- create train/test functions and data pipeline
-    - test/train basics done, need to adjust some stuff for regression
-- create simple LSTM with pytorch
-    - done? 0,1,2,3 --> 1,2,3,4 (linear) should be really simple to learn
-    - loss not going down quickly enough, even for dummy data
-    - either stupid bug, or model setup/change from classification to regression not complete
-- visualize results
-    - TODO, after loss goes down (faster)
-## Expand
-- expand to more variations of classic models
-- different activation functions (changes non-linearity)
-- change datasets to better reflect real world (distributions of inputs)
+The steps to get a model off the ground are the following:
+1. Create a config json for the dataset (see gen_template or the other gen_x files for examples)
+    - define the ODE
+    - define the inputs of the ODE through the config file (need to probably look into helper functions for creating the inputs)
+2. Run the corresponding gen file to generate the data, build_dataset.py gets automatically called
+3. Optional but recommended: run vis.py for only the data (not the results, just comment results part out) to create plots for the dataset
+4. Run search_hyper.py to run the hyperparameter search for the specified parameters with the dataset
+    - define all the parameters you want to search in lists, and the names of the experiment
+    - I always called it version 1 for one search, then took the best results, and searched other parameters as version 2
+    - currently only lr, nodes, layers working
+    - for other parameters search_hyper.py, train.py and probably the models need to be adjusted
+    - summarize and predict best gets called automatically after
+5. Optional if you change something on the script after training the model, so you dont have to retrain: Run predict_best.py to load the best model and run it on the train/val/test set (need to adjust name of experiment and dataset)
+6. Optional if you change something on the script after training the model, so you dont have to retrain: Run summarize.py to create plots of the training progress and save the results as csv
+7. Run vis.py to create plots for the results of the model (this time with the results part uncommented)
 
+Most of these things should work with other datasets with more inputs and outputs, but some things might need to be adjusted. Especially the visualizations.
 
-## Architecture
+# Other questions
 
-### Input, Output
-
-- input: 0 --> n, [batch size, sequence length (number of time steps) , number of features at every time step] (batch size = number of different sequences)
-    - features: inputs of dynamic systems (current/voltage or mechanical force)
-    - how to encode initial conditions? Give them as inputs, then make them 0 when no values available
-- intermediates:
-    - naive solution would be to give the output of the last time step as input to the current time step
-    - however this information should be encoded in the hidden state of the LSTM
-    - so we can as well just make some inputs "initial conditions" and set these to 0 after the first time steps
-    - the rest should be learned by the LSTM
-- output: 0 --> n, any number of values the function would predict
-
-This means a system with no inputs and a starting condition will have one input for a few time steps, then none and the information of the last time steps is encoded in the hidden and cell states of the LSTM however it wants the history to be encoded.
-
-A system is only time dependent (time variant), if the system (not the input) varies in time.
-
-- example: learn y(t) = sin(t) + u with u = [0]*n as input !!! sin(t) not time variant
-    - so learn simple sine function and set input to 0
-    - sin is nonlinear and depends on previous time steps as the gradient has two options at almost every point
-- example: y(t) = t*u
+The code is not super well documented and in parts I created some non optimal solutions to problems. So if there are questions about the models/architectures, optimizer and other things in the process, I would first recommend to read the nonlinearLSTM.pdf file and/or check the code itself. If there are still questions after that feel free to contact me via <sebastian.hirt@fau.de> and I'll try to answer any open questions.
 
 
-So we have multiple situations:
-- many-to-many: every time step has a input value
-- one-to-many: some or only the first time step has a input value, e.g. Initial value of a sine curve
-
-### model
-
-
-## TODO:
-
-- create better skeleton for data generation and visualization
-    - pandas dataframe:
-        - extra column for different timeseries (1, 2, 3, etc.); potentially with different parameters of the differential equation, TODO -> DONE 
-            - what variation of inputs?, only learn one input (e.g. Only one "setting", probably vary impulse)
-        - define in data which variables are input and which are labels to define dataset independent of use case (if correctly defined) TODO -> DONE
-        - visualize functions: TODO (kinda done, need to either do it manually, or work with dataframes and then just print dataframe basically)
-        - result: comparisons of prediction to output and error in same plot, TODO started to write prediction file, to load trained model and compare to ground truth --> DONE 
-        - loss and maybe other metrics to better track training status, training and test loss plotted DONE
-        - TODO: use validation set as well 60/20/20 split, validation only useful when hyperparameter tuning
-        - Tune/go over Hyperparameters:
-            - 
-
-
-- go through checklist for training lstm's to make it converge to good solution:
-    - http://karpathy.github.io/2019/04/25/recipe/ half done, TODO generalization
-        - use more data (longer training times, 10 min already annoying for quick iteration, maybe just write theory part in latex during that time, better with bigger batch size/parallelization) --> DONE
-        - need better setup for saving config for current model, settings (weird stuff with pytorch load) and better for reproducibility --> TODO
-        - thermal model: inital predictions not the same as inital conditions given to the model
-            - model just didnt learn to just let the initial condition inputs flow through on the first few "init" timesteps, and instead sets them to something else.
-            - or a bug (however other 2 models dont have that problem)
-            - should figure out in general if network has the capacity to learn function (overfit it)
-
-- keep it simple:
-    - one simple input, keep most stuff constant, if not all
-    - overfit
-    - slides for data generation, training, evaluation for pendulum, then same results for thermal and transmission
-
-Presentation:
--          Problemstellung (z.B. Pendel)
-
--          Angesetztes Netz und Methode
-
--          Erstellung der Trainingssets, Verlauf und Variationen
-
--          Trainingserfolg und Konvergenz, Plot Loss über Iterationen
-
--          Prediction vs. Trainingsset bei bestem Hyperparameterset
-
--          Validierung an neuem Arbeitspunkt bzw. Verlauf, welcher aus dem Trainingsset ausgenommen wurde
-
-
-iguana
-sklearn --> normalization, scaler (fit --> transform), ausgang und eingang normieren, je nach activierungsfunktion
-3 kraftsprünge (100,200,300)
-
-andere "beispiele" für loss und prediction bis Montag
-
-input norm maybe: https://datascience.stackexchange.com/questions/24214/why-should-i-normalize-also-the-output-data
-
-What hyperparameter to test:
-- depth of network (vanishing gradient!!!)
-- width of network
-- more variance in data!
-- activation function, need to rewrite model code, pytorch LSTM only supports tanh default
-
-ToDo:
-- Pytorch initialization, random, done
-    - stdv = 1. / math.sqrt(self.weight.size(1))
-      self.weight.data.uniform_(-stdv, stdv)
-- check that seeding is working, check inital weights, done
-- just always normalize input and output (better if scales change), done
-- manually Hyperparameters checking, one by one, done
-    - create better train/data functions with better logging
-    - constant
-        - dataset, split
-        - activation function (need to rewrite model code, pytorch LSTM only supports tanh default)
-        - always normalize (need to rewrite training/loss to be able to compare loss/accuracy while training, to compare to non-normalized results; for autotuner)
-    - hyperparameters
-        - number of units in lstm/fc layer
-        - learning rate
-        - weight init
-        - dropout probability
-        - learning rate decay
-        - momentum
-- mby compare to auto tuner of hyperparameters, training takes long (gpu not working for some reason) need to load model and compare loss
-- can't use batch norm in rnn/lstm, batch norm gets calculated once (need to modify for following loops as the statistics change in time)
-
-questions:
-- what variation to bring into data?
-    - start easy, work way up to more complex stuff
-    - change what makes for interesting data
-- what methods to explain in what detail
-    - change whats needed, keep short
-- what hyperparameters
-    - first depth
-    - then width over all layers
-    - then learning rate
-    - then squeeze out
-- roter faden?
-    - zeigen dass lstm nonlinear sequences predicten kann
-    - über längere zeit mit verschiedenen daten
-- can i write in English? yes
-- pages? ~20 (probably more, lots of figures)
-
-- maybe redo simple pendulum, heights of spikes don't vary
-- redo complex drag, initial condition change creates almost the same samples, training too close to validation/test
-- complex pend might be fine, initial condition changes whole sample, not just beginning
-
-## Training times
+# some training times on 1x gtx 1060 3gb
 - 120 samples, 3000 length, 500 epochs
     - five layer 30 min
     - two layer 15 min 
     - width, lr not really affecting time
     - 5000 epochs, 118 mins (two layers/32 nodes)
-~ Deadline: 1.dez
+
+
+- source for generic stuff, lecture?, basics book?
+- code zip email/faubox
+
+~ Deadline: 15.dez
 20.6. anmeldung
