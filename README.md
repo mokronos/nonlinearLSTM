@@ -23,6 +23,7 @@ This is just a overview of the different files and folders in this repository.
 - results: contains the results as csv of the different models
 - test: should contain unit tests, but is currently empty
 - ray_results: contains the results of the hyperparameter search with raytune, but not fully working (isn't tracked right now, but will be created if script is ran)
+- latex: contains the latex files for the report
 
 ## Files
 - autotune.py: script for hyperparameter search with raytune, gpu not working for some reason, need to still evaluate trained models
@@ -87,7 +88,7 @@ Im just listing some of the packages I used, but it might be better to just go t
 
 # Other questions
 
-The code is not super well documented and in parts I created some non optimal solutions to problems. So if there are questions about the models/architectures, optimizer and other things in the process, I would first recommend to read the nonlinearLSTM.pdf file and/or check the code itself. If there are still questions after that feel free to contact me via <sebastian.hirt@fau.de> and I'll try to answer any open questions.
+The code is not super well documented and in parts I created some non optimal solutions to problems. So if there are questions about the models/architectures, optimizer and other things in the process, I would first recommend to read the nonlinearLSTM_report.pdf file and/or check the code itself. If there are still questions after that feel free to contact me via <sebastian.hirt@fau.de> and I'll try to answer any open questions.
 
 
 # some training times on 1x gtx 1060 3gb
