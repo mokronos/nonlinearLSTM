@@ -97,3 +97,8 @@ The code is not super well documented and in parts I created some non optimal so
     - two layer 15 min 
     - width, lr not really affecting time
     - 5000 epochs, 118 mins (two layers/32 nodes)
+# inference times:
+- 2 layer 64 nodes, 1000 length:
+    - 0.035 s
+    - --> for one step: 0.000035 s
+    - fps (one step): 1/0.000035 = 28571.428571428572

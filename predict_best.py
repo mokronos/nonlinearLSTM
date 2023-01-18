@@ -1,4 +1,5 @@
 import json
+import time
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
@@ -104,7 +105,13 @@ def predict_best_model(data_name, descriptor, version, variation = "base"):
         ground_truth = []
         for X,y in dataloader:
             X, y = X.to(device), y.to(device)
-            pred = model(X).detach().cpu().numpy()
+            # measure time to predict one sample
+            with torch.no_grad():
+                start_time = time.time()
+                pred = model(X).detach().cpu().numpy()
+                end_time = time.time()
+                print(f"Time to predict: {end_time - start_time} seconds")
+
             gt = y.detach().cpu().numpy()
             predictions.append(pred)
             ground_truth.append(gt)
