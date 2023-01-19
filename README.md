@@ -88,7 +88,7 @@ Im just listing some of the packages I used, but it might be better to just go t
 
 # Other questions
 
-The code is not super well documented and in parts I created some non optimal solutions to problems. So if there are questions about the models/architectures, optimizer and other things in the process, I would first recommend to read the nonlinearLSTM_report.pdf file and/or check the code itself. If there are still questions after that feel free to contact me via <sebastian.hirt@fau.de> and I'll try to answer any open questions.
+The code is not super well documented and in parts I created some non optimal solutions to problems. So if there are questions about the models/architectures, optimizer and other things in the process, I would first recommend to read the nonlinearLSTM_report.pdf file and/or check the code itself. If there are still questions after that feel free to contact me via <sebastian.hirt@fau.de> and I'll try to answer any open questions. I'm freezing/archiving this repository to keep it in the state it was, when finishing the report and presentation. For further work it should be forked.
 
 
 # some training times on 1x gtx 1060 3gb
